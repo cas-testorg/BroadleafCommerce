@@ -1,13 +1,30 @@
+/*-
+ * #%L
+ * BroadleafCommerce Common Libraries
+ * %%
+ * Copyright (C) 2009 - 2026 Broadleaf Commerce
+ * %%
+ * Licensed under the Broadleaf Fair Use License Agreement, Version 1.0
+ * (the "Fair Use License" located  at http://license.broadleafcommerce.org/fair_use_license-1.0.txt)
+ * unless the restrictions on use therein are violated and require payment to Broadleaf in which case
+ * the Broadleaf End User License Agreement (EULA), Version 1.1
+ * (the "Commercial License" located at http://license.broadleafcommerce.org/commercial_license-1.1.txt)
+ * shall apply.
+ *
+ * Alternatively, the Commercial License may be replaced with a mutually agreed upon license (the "Custom License")
+ * between you and Broadleaf Commerce. You may not use this file except in compliance with the applicable license.
+ * #L%
+ */
 package org.broadleafcommerce.common.dialect;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.OracleEnumJdbcType;
-import org.hibernate.dialect.OracleJdbcHelper;
-import org.hibernate.dialect.OracleJsonJdbcType;
-import org.hibernate.dialect.OracleOrdinalEnumJdbcType;
-import org.hibernate.dialect.OracleReflectionStructJdbcType;
-import org.hibernate.dialect.OracleXmlJdbcType;
+import org.hibernate.dialect.type.OracleEnumJdbcType;
+import org.hibernate.dialect.type.OracleJdbcHelper;
+import org.hibernate.dialect.type.OracleJsonJdbcType;
+import org.hibernate.dialect.type.OracleOrdinalEnumJdbcType;
+import org.hibernate.dialect.type.OracleReflectionStructJdbcType;
+import org.hibernate.dialect.type.OracleXmlJdbcType;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.ServiceRegistry;
@@ -23,8 +40,8 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.Types;
 
-import static org.hibernate.dialect.OracleJdbcHelper.getArrayJdbcTypeConstructor;
-import static org.hibernate.dialect.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
+import static org.hibernate.dialect.type.OracleJdbcHelper.getArrayJdbcTypeConstructor;
+import static org.hibernate.dialect.type.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 
 public class BroadleafOracleDialect extends OracleDialect {
@@ -55,9 +72,10 @@ public class BroadleafOracleDialect extends OracleDialect {
 
 		// account for Oracle's deprecated support for LONGVARBINARY
 		// prefer BLOB, unless the user explicitly opts out
-		final boolean preferLong = serviceRegistry.requireService( ConfigurationService.class )
-				.getSetting( PREFER_LONG_RAW, StandardConverters.BOOLEAN, false );
-		typeContributions.contributeJdbcType( preferLong ? BlobJdbcType.PRIMITIVE_ARRAY_BINDING : BlobJdbcType.DEFAULT );
+        //FIXME PREFER_LONG_RAW deprecated
+//		final boolean preferLong = serviceRegistry.requireService( ConfigurationService.class )
+//				.getSetting( PREFER_LONG_RAW, StandardConverters.BOOLEAN, false );
+//		typeContributions.contributeJdbcType( preferLong ? BlobJdbcType.PRIMITIVE_ARRAY_BINDING : BlobJdbcType.DEFAULT );
 
 		if ( getVersion().isSameOrAfter( 21 ) ) {
 			typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
