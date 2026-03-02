@@ -4,12 +4,12 @@ on:
   # Run on any push/pull to a Renovate branch or release-3.6-codelogic
   push:
     branches:
-      #- renovate/**
-      - codelogic
+      - renovate/**
+      #- codelogic
   pull_request:
     branches:
-      #- renovate/**
-      - codelogic
+      - renovate/**
+      #- codelogic
   # Allow manual runs
   workflow_dispatch:
   
