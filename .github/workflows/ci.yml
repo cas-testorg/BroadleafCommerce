@@ -1,0 +1,86 @@
+name: CodeLogic Scan
+
+on:
+  # Run on any push/pull to a Renovate branch or release-3.6-codelogic
+  push:
+    branches:
+      #- renovate/**
+      - codelogic
+  pull_request:
+    branches:
+      #- renovate/**
+      - codelogic
+  # Allow manual runs
+  workflow_dispatch:
+  
+jobs:
+  build-and-scan:
+    name: Build + CodeLogic Scan
+    runs-on: ubuntu-latest
+    environment: CodeLogic Scan Env
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # IMPORTANT: no Maven cache => avoid "No space left on device" on caching
+      - name: Set up JDK 17 (no cache)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Build and test
+        shell: bash
+        run: |
+          set -euo pipefail
+          #BUILD_LOG="${RUNNER_TEMP}/mvn-build.log"
+          #echo "BUILD_LOG=${BUILD_LOG}" >> "$GITHUB_ENV"
+          mvn -B -ntp clean install #|& tee "${BUILD_LOG}"
+          
+      - name: Run CodeLogic Scan
+        env:
+          CODELOGIC_HOST:   ${{ vars.CODELOGIC_HOST }}
+          AGENT_UUID:       ${{ secrets.AGENT_UUID }}
+          AGENT_PASSWORD:   ${{ secrets.AGENT_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORKSPACE="${GITHUB_WORKSPACE:-${{ github.workspace }}}"
+          SCAN_MOUNT_PATH="$WORKSPACE"
+
+          docker run --rm \
+            -e CODELOGIC_HOST \
+            -e AGENT_UUID \
+            -e AGENT_PASSWORD \
+            -v "${SCAN_MOUNT_PATH}:/github/workspace" \
+            public.ecr.aws/codelogic.com/codelogic_java:latest \
+              analyze -t scan -p /github/workspace \
+                -a BroadleafCommerce \
+                -m org.broadleafcommerce \
+                -s BroadLeaf \
+                --rescan \
+                --expunge-scan-sessions
+                
+      - name: Send Build Info (with build log)
+        if: always()
+        env:
+          CODELOGIC_HOST:   ${{ vars.CODELOGIC_HOST }}
+          AGENT_UUID:       ${{ secrets.AGENT_UUID }}
+          AGENT_PASSWORD:   ${{ secrets.AGENT_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker run --pull always --rm \
+            -e CODELOGIC_HOST \
+            -e AGENT_UUID \
+            -e AGENT_PASSWORD \
+            -v "${GITHUB_WORKSPACE}:/scan" \
+            thingsboard.app.codelogic.com/codelogic_java:latest \
+              send_build_info \
+                --build-number="${{ github.run_number }}" \
+                --pipeline-system="GitHub Actions" \
+                --job-name="Build + CodeLogic Scan" \
+                --build-status="${{ job.status }}" \
+                --log-lines=50000
