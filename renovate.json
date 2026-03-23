@@ -5,7 +5,7 @@
     ":dependencyDashboardApproval"
   ],
 
-  "baseBranchPatterns": ["codelogictest*"],
+  "baseBranchPatterns": ["codelogictest1", "codelogictest2"],
   "dependencyDashboardTitle": "Renovate Dashboard (codelogic)",
 
   "recreateWhen": "never",
