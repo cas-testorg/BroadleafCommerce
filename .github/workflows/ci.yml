@@ -12,16 +12,25 @@ on:
       #- codelogic
   # Allow manual runs
   workflow_dispatch:
-  
+
+permissions:
+  contents: read
+
 jobs:
   build-and-scan:
     name: Build + CodeLogic Scan
     runs-on: ubuntu-latest
     environment: CodeLogic Scan Env
 
+    env:
+      # Optional override if your agent image is not at ${CODELOGIC_HOST#*://}/codelogic_java:latest
+      CODELOGIC_AGENT_IMAGE: ${{ vars.CODELOGIC_AGENT_IMAGE }}
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # IMPORTANT: no Maven cache => avoid "No space left on device" on caching
       - name: Set up JDK 17 (no cache)
@@ -34,34 +43,42 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          BUILD_LOG="${RUNNER_TEMP}/mvn-build.log"
-          echo "BUILD_LOG=${BUILD_LOG}" >> "$GITHUB_ENV"
-          mvn -B -ntp clean install |& tee "${BUILD_LOG}"
-          
+          mkdir -p "${GITHUB_WORKSPACE}/logs"
+          set -o pipefail
+          mvn -B -ntp clean install 2>&1 | tee "${GITHUB_WORKSPACE}/logs/build.log"
+
       - name: Run CodeLogic Scan
         env:
-          CODELOGIC_HOST:   ${{ vars.CODELOGIC_HOST }}
-          AGENT_UUID:       ${{ secrets.AGENT_UUID }}
-          AGENT_PASSWORD:   ${{ secrets.AGENT_PASSWORD }}
+          CODELOGIC_HOST: ${{ vars.CODELOGIC_HOST }}
+          AGENT_UUID: ${{ secrets.AGENT_UUID }}
+          AGENT_PASSWORD: ${{ secrets.AGENT_PASSWORD }}
         shell: bash
         run: |
           set -euo pipefail
           WORKSPACE="${GITHUB_WORKSPACE:-${{ github.workspace }}}"
           SCAN_MOUNT_PATH="$WORKSPACE"
 
-          docker run --rm \
+          if [[ -n "${CODELOGIC_AGENT_IMAGE:-}" ]]; then
+            IMAGE="${CODELOGIC_AGENT_IMAGE}"
+          else
+            REGISTRY="${CODELOGIC_HOST#https://}"
+            REGISTRY="${REGISTRY#http://}"
+            IMAGE="${REGISTRY}/codelogic_java:latest"
+          fi
+
+          docker run --pull always --rm \
             -e CODELOGIC_HOST \
             -e AGENT_UUID \
             -e AGENT_PASSWORD \
             -v "${SCAN_MOUNT_PATH}:/github/workspace" \
-            thingsboard.app.codelogic.com/codelogic_java:latest \
+            "${IMAGE}" \
               analyze -t scan -p /github/workspace \
                 -a BroadleafCommerce \
                 -m org.broadleafcommerce \
                 -s BroadLeaf \
                 --expunge-scan-sessions
-                
-      - name: Send Build Info (with build log)
+
+      - name: Send build info to CodeLogic
         if: always()
         env:
           CODELOGIC_HOST: ${{ vars.CODELOGIC_HOST }}
@@ -70,26 +87,70 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p "${GITHUB_WORKSPACE}/logs"
+          if [[ ! -f "${GITHUB_WORKSPACE}/logs/build.log" ]]; then
+            echo "No Maven build log was produced (a step may have failed before mvn)." \
+              > "${GITHUB_WORKSPACE}/logs/build.log"
+          fi
 
-          BUILD_LOG="${BUILD_LOG:-${RUNNER_TEMP}/mvn-build.log}"
-          LOG_NAME="$(basename "${BUILD_LOG}")"
+          # GitHub job.status is lowercase; CodeLogic expects Jenkins-style labels (see send_build_info -t).
+          GH_STATUS="${{ job.status }}"
+          case "${GH_STATUS}" in
+            success)   BUILD_STATUS="SUCCESS" ;;
+            failure)   BUILD_STATUS="FAILURE" ;;
+            cancelled) BUILD_STATUS="CANCELLED" ;;
+            *)         BUILD_STATUS="${GH_STATUS^^}" ;;
+          esac
 
-          echo "BUILD_LOG=${BUILD_LOG}"
-          echo "LOG_NAME=${LOG_NAME}"
-          ls -la "${RUNNER_TEMP}" || true
-          test -f "${BUILD_LOG}"
+          if [[ -n "${CODELOGIC_AGENT_IMAGE:-}" ]]; then
+            IMAGE="${CODELOGIC_AGENT_IMAGE}"
+          else
+            REGISTRY="${CODELOGIC_HOST#https://}"
+            REGISTRY="${REGISTRY#http://}"
+            IMAGE="${REGISTRY}/codelogic_java:latest"
+          fi
 
           docker run --pull always --rm \
-            -e CODELOGIC_HOST \
-            -e AGENT_UUID \
-            -e AGENT_PASSWORD \
             -v "${GITHUB_WORKSPACE}:/scan" \
-            -v "${RUNNER_TEMP}:/log_file_path" \
-            thingsboard.app.codelogic.com/codelogic_java:latest \
+            "${IMAGE}" \
               send_build_info \
+                --agent-uuid="${AGENT_UUID}" \
+                --agent-password="${AGENT_PASSWORD}" \
+                --server="${CODELOGIC_HOST}" \
+                --path=/scan \
                 --build-number="${{ github.run_number }}" \
                 --pipeline-system="GitHub Actions" \
-                --job-name="Build + CodeLogic Scan" \
-                --build-status="${{ job.status }}" \
-                --log-file="${LOG_NAME}" \
-                --log-lines=50000
+                --job-name="${{ github.repository }} — ${{ github.workflow }}" \
+                --build-status="${BUILD_STATUS}" \
+                --log-file=/scan/logs/build.log \
+                --log-lines=50000 \
+                --timeout=300 \
+                --verbose
+
+      - name: CodeLogic CI summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## CodeLogic CI"
+            echo ""
+            echo "| Item | Value |"
+            echo "| --- | --- |"
+            echo "| Repository | \`${{ github.repository }}\` |"
+            echo "| Workflow | \`${{ github.workflow }}\` |"
+            echo "| Run | ${{ github.run_id }} (attempt ${{ github.run_attempt }}) |"
+            echo "| Ref | \`${{ github.ref }}\` |"
+            echo "| SHA | \`${{ github.sha }}\` |"
+            echo "| Job status | **${{ job.status }}** |"
+            echo ""
+            echo "Build log is sent to CodeLogic via \`send_build_info\` when credentials are configured."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload Maven log artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-build-log
+          path: logs/build.log
+          if-no-files-found: ignore
+          retention-days: 14
