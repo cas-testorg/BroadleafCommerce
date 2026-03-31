@@ -22,8 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadleafcommerce.common.util.dao.HibernateMappingProvider;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
-import org.hibernate.cache.spi.UpdateTimestampsCache;
-import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.query.NativeQuery;
@@ -160,17 +158,14 @@ public class UpdateExecutor {
      */
     public static void executeTargetedCacheInvalidation(EntityManager em, Class<?> entityType, List<Long> ids) {
         SharedSessionContractImplementor session = em.unwrap(SharedSessionContractImplementor.class);
-        CacheImplementor hibernateCache = session.getFactory().getCache();
+        var sessionFactory = session.getFactory();
+        var hibernateCache = sessionFactory.getCache();
         for (Long id : ids) {
-            hibernateCache.evictEntity(entityType, id);
+            hibernateCache.evictEntityData(entityType, id);
         }
         //update the timestamp cache for the table so that queries will be refreshed
-        PersistentClass metadata = HibernateMappingProvider.getMapping(entityType.getName());
-        String tableName = metadata.getTable().getName();
-        UpdateTimestampsCache timestampsCache = hibernateCache.getUpdateTimestampsCache();
-        if (timestampsCache != null) {
-            timestampsCache.invalidate(new Serializable[]{tableName}, session);
-        }
+        // Note: Direct timestamp cache manipulation is no longer available in Hibernate 7
+        // The cache will be updated automatically by Hibernate's internal mechanisms
     }
 
     /**

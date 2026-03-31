@@ -19,7 +19,7 @@ package org.broadleafcommerce.common.util.sql.importsql;
 
 import org.broadleafcommerce.common.logging.SupportLogManager;
 import org.broadleafcommerce.common.logging.SupportLogger;
-import org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor;
+import org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor;
 
 import java.io.Reader;
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  *
  * @author Jeff Fischer
  */
-public class DemoOracleSingleLineSqlCommandExtractor extends SingleLineSqlCommandExtractor {
+public class DemoOracleSingleLineSqlCommandExtractor extends SingleLineSqlScriptExtractor {
 
     public static final String TRUE = "1";
     public static final String FALSE = "0";

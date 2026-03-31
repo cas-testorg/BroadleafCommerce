@@ -20,7 +20,7 @@ package org.broadleafcommerce.common.util.sql.importsql;
 import org.broadleafcommerce.common.logging.SupportLogManager;
 import org.broadleafcommerce.common.logging.SupportLogger;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor;
+import org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor;
 
 import java.io.Reader;
 import java.io.Serial;
@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
  *
  * @author Jay Aisenbrey (cja769)
  */
-public class DemoPostgresSingleLineSqlCommandExtractor extends SingleLineSqlCommandExtractor {
+public class DemoPostgresSingleLineSqlCommandExtractor extends SingleLineSqlScriptExtractor {
 
     public static final String NEWLINE_REPLACEMENT_REGEX = "\\\\r\\\\n";
     @Serial
