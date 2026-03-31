@@ -31,6 +31,8 @@
             <property name="hibernate.format_sql" value="true"/>
             <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
             <property name="hibernate.id.optimizer.pooled.prefer_lo" value="true"/>
+            <property name="hibernate.id.db_structure_naming_strategy" value="legacy"/>
+            <property name="hibernate.javax.cache.missing_cache_strategy" value="create"/>
         </properties>
     </persistence-unit>
 </persistence>
