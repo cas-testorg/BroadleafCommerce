@@ -25,6 +25,8 @@ import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.spi.TransformerException;
+
 
 /**
  * This is the override of Hibernate transformer that adds filtration based on class/package name to prevernt
@@ -45,7 +47,7 @@ public class BroadleafHibernateEnhancingClassTransformerImpl extends EnhancingCl
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
-    ) {
+    ) throws TransformerException {
         String convertedClassName = className.replace('/', '.');
         boolean isValidPattern = true;
         List<DirectCopyIgnorePattern> matchedPatterns = new ArrayList<DirectCopyIgnorePattern>();

@@ -51,13 +51,13 @@ public class DemoSqlServerSingleLineSqlCommandExtractor extends SingleLineSqlScr
     protected boolean alreadyRun = false;
 
     @Override
-    public String[] extractCommands(Reader reader) {
+    public String[] extractCommands(Reader reader, Dialect dialect) {
         if (!alreadyRun) {
             alreadyRun = true;
             LOGGER.support("Converting hibernate.hbm2ddl.import_files sql statements for compatibility with SQL Server");
         }
 
-        String[] statements = super.extractCommands(reader);
+        String[] statements = super.extractCommands(reader, dialect);
         handleReplacements(statements);
 
         return statements;

@@ -47,8 +47,8 @@ public class DemoPostgresSingleLineSqlCommandExtractor extends SingleLineSqlScri
     private static final long serialVersionUID = 1L;
 
     @Override
-    public String[] extractCommands(Reader reader) {
-        String[] commands = super.extractCommands(reader);
+    public String[] extractCommands(Reader reader, Dialect dialect) {
+        String[] commands = super.extractCommands(reader, dialect);
         String[] newCommands = new String[commands.length];
         int i = 0;
         for (String command : commands) {

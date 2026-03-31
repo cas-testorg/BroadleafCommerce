@@ -140,7 +140,7 @@ public class UpdateExecutor {
             try {
                 response += query.executeUpdate();
             } finally {
-                em.unwrap(Session.class).setFlushMode(mode);
+                em.unwrap(Session.class).setHibernateFlushMode(mode);
             }
         }
         return response;

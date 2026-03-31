@@ -35,8 +35,8 @@ import java.util.List;
 public class DemoHsqlSingleLineSqlCommandExtractor extends SingleLineSqlScriptExtractor {
 
     @Override
-    public String[] extractCommands(Reader reader) {
-        String[] commands = super.extractCommands(reader);
+    public String[] extractCommands(Reader reader, Dialect dialect) {
+        String[] commands = super.extractCommands(reader, dialect);
         String[] newCommands = new String[commands.length];
         int i = 0;
         for (String command : commands) {

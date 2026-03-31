@@ -19,6 +19,7 @@ package org.broadleafcommerce.common.util.sql.importsql;
 
 import org.broadleafcommerce.common.logging.SupportLogManager;
 import org.broadleafcommerce.common.logging.SupportLogger;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor;
 
 import java.io.Reader;
@@ -48,13 +49,13 @@ public class DemoOracleSingleLineSqlCommandExtractor extends SingleLineSqlScript
     protected boolean alreadyRun = false;
 
     @Override
-    public String[] extractCommands(Reader reader) {
+    public String[] extractCommands(Reader reader, Dialect dialect) {
         if (!alreadyRun) {
             alreadyRun = true;
             LOGGER.support("Converting hibernate.hbm2ddl.import_files sql statements for compatibility with Oracle");
         }
 
-        String[] statements = super.extractCommands(reader);
+        String[] statements = super.extractCommands(reader, dialect);
         handleBooleans(statements);
 
         //remove Oracle incompatible - multi-row inserts
