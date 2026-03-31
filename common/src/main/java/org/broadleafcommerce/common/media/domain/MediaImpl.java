@@ -59,6 +59,7 @@ public class MediaImpl implements Media, MultiTenantCloneable<MediaImpl> {
 
     @Id
     @GeneratedValue(generator = "MediaId")
+    @SuppressWarnings("deprecation")
     @GenericGenerator(
             name = "MediaId",
             strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",

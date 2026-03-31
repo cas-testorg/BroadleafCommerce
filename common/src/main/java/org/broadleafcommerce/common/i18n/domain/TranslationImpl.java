@@ -64,6 +64,7 @@ public class TranslationImpl implements Serializable, Translation {
 
     @Id
     @GeneratedValue(generator = "TranslationId")
+    @SuppressWarnings("deprecation")
     @GenericGenerator(
             name = "TranslationId",
             strategy = "org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",

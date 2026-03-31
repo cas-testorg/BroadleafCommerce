@@ -67,6 +67,7 @@ public class DataDrivenEnumerationImpl implements DataDrivenEnumeration {
 
     @Id
     @GeneratedValue(generator = "DataDrivenEnumerationId")
+    @SuppressWarnings("deprecation")
     @GenericGenerator(
             name = "DataDrivenEnumerationId",
             strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",

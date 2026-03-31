@@ -72,6 +72,7 @@ public abstract class AbstractModuleConfiguration implements ModuleConfiguration
 
     @Id
     @GeneratedValue(generator = "ModuleConfigurationId")
+    @SuppressWarnings("deprecation")
     @GenericGenerator(
             name = "ModuleConfigurationId",
             strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",

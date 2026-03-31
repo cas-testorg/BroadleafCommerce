@@ -50,6 +50,7 @@ public class EmailTrackingClicksImpl implements EmailTrackingClicks {
 
     @Id
     @GeneratedValue(generator = "ClickId")
+    @SuppressWarnings("deprecation")
     @GenericGenerator(
             name = "ClickId",
             strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",

@@ -96,6 +96,7 @@ public class IdOverrideTableGenerator extends TableGenerator {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void configure(Type type, Properties params, ServiceRegistry registry) throws MappingException {
         params.putIfAbsent("table_name", "SEQUENCE_GENERATOR");
         params.putIfAbsent("segment_column_name", DEFAULT_SEGMENT_COLUMN_NAME);
