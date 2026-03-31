@@ -183,6 +183,8 @@
             <version>${project.version}</version><!--$NO-MVN-MAN-VER$ -->
             <classifier>tests</classifier>
         </dependency>
+        <!-- Temporarily removed due to Hibernate 7 incompatibility -->
+        <!--
         <dependency>
             <groupId>org.broadleafcommerce</groupId>
             <artifactId>broadleaf-admin-module</artifactId>
@@ -191,6 +193,7 @@
             <groupId>org.broadleafcommerce</groupId>
             <artifactId>broadleaf-contentmanagement-module</artifactId>
         </dependency>
+        -->
         <dependency>
             <groupId>org.broadleafcommerce</groupId>
             <artifactId>broadleaf-common</artifactId>
