@@ -27,13 +27,14 @@
         <class>org.broadleafcommerce.common.config.domain.SystemPropertyImpl</class>
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <properties>
-            <property name="hibernate.hbm2ddl.auto" value="create"/>
+            <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
+            <property name="jakarta.persistence.schema-generation.create-source" value="metadata-then-script"/>
+            <property name="jakarta.persistence.schema-generation.create-script-source" value="import.sql"/>
             <property name="hibernate.show_sql" value="false"/>
             <property name="hibernate.format_sql" value="true"/>
             <property name="hibernate.id.optimizer.pooled.prefer_lo" value="true"/>
             <property name="hibernate.id.db_structure_naming_strategy" value="legacy"/>
             <property name="hibernate.javax.cache.missing_cache_strategy" value="create"/>
-            <property name="hibernate.hbm2ddl.import_files" value="/import.sql"/>
         </properties>
     </persistence-unit>
 </persistence>
