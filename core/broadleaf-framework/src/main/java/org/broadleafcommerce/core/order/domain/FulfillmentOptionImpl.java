@@ -34,7 +34,8 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.io.Serial;
 
@@ -80,8 +81,7 @@ public class FulfillmentOptionImpl implements FulfillmentOption {
             order = Presentation.FieldOrder.NAME, prominent = true, gridOrder = 1000, translatable = true)
     protected String name;
 
-    @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    @JdbcTypeCode(SqlTypes.MATERIALIZED_CLOB)
     @Column(name = "LONG_DESCRIPTION", length = Integer.MAX_VALUE - 1)
     @AdminPresentation(friendlyName = "FulfillmentOptionImpl_longDescription",
             order = Presentation.FieldOrder.DESCRIPTION, translatable = true)

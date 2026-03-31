@@ -33,7 +33,8 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.io.Serial;
 import java.math.BigDecimal;
@@ -93,8 +94,7 @@ public class SkuFeeImpl implements SkuFee {
     @Column(name = "TAXABLE")
     protected Boolean taxable = Boolean.FALSE;
 
-    @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    @JdbcTypeCode(SqlTypes.MATERIALIZED_CLOB)
     @Column(name = "EXPRESSION", length = Integer.MAX_VALUE - 1)
     protected String expression;
 

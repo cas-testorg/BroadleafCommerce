@@ -68,7 +68,8 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.io.Serial;
 import java.math.BigDecimal;
@@ -234,8 +235,7 @@ public class CategoryImpl implements Category, Status, AdminMainEntity, Locatabl
             group = GroupName.ProductDefaults)
     protected String displayTemplate;
 
-    @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    @JdbcTypeCode(SqlTypes.MATERIALIZED_CLOB)
     @Column(name = "LONG_DESCRIPTION", length = Integer.MAX_VALUE - 1)
     @AdminPresentation(friendlyName = "CategoryImpl_Category_Long_Description", order = 2000,
             group = GroupName.General,

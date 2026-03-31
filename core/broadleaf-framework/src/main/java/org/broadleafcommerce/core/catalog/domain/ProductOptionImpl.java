@@ -41,7 +41,8 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.io.Serial;
 import java.util.ArrayList;
@@ -149,8 +150,7 @@ public class ProductOptionImpl implements ProductOption, AdminMainEntity, Produc
             group = GroupName.General,
             addType = AddMethodType.PERSIST)
     protected List<ProductOptionValue> allowedValues = new ArrayList<>();
-    @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    @JdbcTypeCode(SqlTypes.MATERIALIZED_CLOB)
     @Column(name = "LONG_DESCRIPTION", length = Integer.MAX_VALUE - 1)
     @AdminPresentation(friendlyName = "productOption_description",
             group = GroupName.General,
