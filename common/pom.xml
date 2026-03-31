@@ -479,9 +479,9 @@
             <artifactId>javassist</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.cache</groupId>
-            <artifactId>jakarta.cache-api</artifactId>
-            <version>3.0.0</version>
+            <groupId>javax.cache</groupId>
+            <artifactId>cache-api</artifactId>
+            <version>1.1.1</version>
         </dependency>
     </dependencies>
 </project>
