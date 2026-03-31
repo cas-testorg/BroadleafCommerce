@@ -88,6 +88,10 @@
                         <target>17</target>
                         <release>17</release>
                         <parameters>true</parameters>
+                        <compilerArgs>
+                            <arg>-Xlint:all</arg>
+                            <arg>-Xlint:-deprecation</arg>
+                        </compilerArgs>
                     </configuration>
                 </plugin>
                 <plugin>
