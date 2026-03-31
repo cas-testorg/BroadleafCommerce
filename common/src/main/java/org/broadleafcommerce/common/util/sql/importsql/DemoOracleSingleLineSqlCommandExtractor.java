@@ -49,26 +49,26 @@ public class DemoOracleSingleLineSqlCommandExtractor extends SingleLineSqlScript
     protected boolean alreadyRun = false;
 
     @Override
-    public String[] extractCommands(Reader reader, Dialect dialect) {
+    public List<String> extractCommands(Reader reader, Dialect dialect) {
         if (!alreadyRun) {
             alreadyRun = true;
             LOGGER.support("Converting hibernate.hbm2ddl.import_files sql statements for compatibility with Oracle");
         }
 
-        String[] statements = super.extractCommands(reader, dialect);
+        List<String> statements = new ArrayList<>(super.extractCommands(reader, dialect));
         handleBooleans(statements);
 
         //remove Oracle incompatible - multi-row inserts
-        List<String> stringList = new ArrayList<String>(Arrays.asList(statements)); //Arrays.asList is immutable
+        List<String> stringList = new ArrayList<>(statements);
         int j = 0;
-        for (String statement : statements) {
+        for (String statement : new ArrayList<>(statements)) {
             if (statement.matches(".*[)]\\s*[,].*")) {
                 int pos = statement.toUpperCase().indexOf("VALUES ") + "VALUES ".length();
                 String prefix = statement.substring(0, pos);
                 stringList.remove(j);
                 String values = statement.substring(pos, statement.length());
                 String[] tokens = values.split("[)]\\s*[,]\\s*[(]");
-                String[] newStatements = new String[tokens.length];
+                List<String> newStatements = new ArrayList<>();
                 for (int i = 0; i < tokens.length; i++) {
                     String suffix = tokens[i];
                     if (!suffix.startsWith("(")) {
@@ -77,9 +77,9 @@ public class DemoOracleSingleLineSqlCommandExtractor extends SingleLineSqlScript
                     if (!suffix.endsWith(")")) {
                         suffix += ")";
                     }
-                    newStatements[i] = prefix + suffix;
+                    newStatements.add(prefix + suffix);
                 }
-                stringList.addAll(j, Arrays.asList(newStatements));
+                stringList.addAll(j, newStatements);
                 j += tokens.length;
             } else {
                 j++;
@@ -88,9 +88,9 @@ public class DemoOracleSingleLineSqlCommandExtractor extends SingleLineSqlScript
 
         //Address raw string dates, if any, for Oracle
         Pattern pattern = Pattern.compile(TIMESTAMPMATCH);
-        statements = stringList.toArray(new String[stringList.size()]);
-        for (int x=0; x<statements.length; x++) {
-            String statement = statements[x];
+        statements = new ArrayList<>(stringList);
+        for (int x=0; x<statements.size(); x++) {
+            String statement = statements.get(x);
             Matcher matcher = pattern.matcher(statement);
             while (matcher.find()) {
                 String date = matcher.group(1);
@@ -114,30 +114,32 @@ public class DemoOracleSingleLineSqlCommandExtractor extends SingleLineSqlScript
             // replace double backslashes with single, since all strings in oracle are literal
             statement = statement.replace("\\\\", "\\");
 
-            statements[x] = statement;
+            statements.set(x, statement);
         }
 
         return statements;
     }
 
-    protected void handleBooleans(String[] statements) {
-        for (int j=0; j<statements.length; j++) {
+    protected void handleBooleans(List<String> statements) {
+        for (int j=0; j<statements.size(); j++) {
+            String statement = statements.get(j);
             //try start matches
-            statements[j] = statements[j].replaceAll(BOOLEANTRUEMATCH + "\\s*[,]", TRUE + ",");
-            statements[j] = statements[j].replaceAll(BOOLEANFALSEMATCH + "\\s*[,]", FALSE + ",");
+            statement = statement.replaceAll(BOOLEANTRUEMATCH + "\\s*[,]", TRUE + ",");
+            statement = statement.replaceAll(BOOLEANFALSEMATCH + "\\s*[,]", FALSE + ",");
 
 
             //try middle matches
-            statements[j] = statements[j].replaceAll("[,]\\s*" + BOOLEANTRUEMATCH + "\\s*[,]", "," + TRUE + ",");
-            statements[j] = statements[j].replaceAll("[,]\\s*" + BOOLEANFALSEMATCH + "\\s*[,]", "," + FALSE + ",");
+            statement = statement.replaceAll("[,]\\s*" + BOOLEANTRUEMATCH + "\\s*[,]", "," + TRUE + ",");
+            statement = statement.replaceAll("[,]\\s*" + BOOLEANFALSEMATCH + "\\s*[,]", "," + FALSE + ",");
 
             //try end matches
-            statements[j] = statements[j].replaceAll("[,]\\s*" + BOOLEANTRUEMATCH, "," + TRUE);
-            statements[j] = statements[j].replaceAll("[,]\\s*" + BOOLEANFALSEMATCH, "," + FALSE);
+            statement = statement.replaceAll("[,]\\s*" + BOOLEANTRUEMATCH, "," + TRUE);
+            statement = statement.replaceAll("[,]\\s*" + BOOLEANFALSEMATCH, "," + FALSE);
 
             //try matches for updates
-            statements[j] = statements[j].replaceAll("[=]\\s*" + BOOLEANTRUEMATCH, "=" + TRUE);
-            statements[j] = statements[j].replaceAll("[=]\\s*" + BOOLEANFALSEMATCH, "=" + FALSE);
+            statement = statement.replaceAll("[=]\\s*" + BOOLEANTRUEMATCH, "=" + TRUE);
+            statement = statement.replaceAll("[=]\\s*" + BOOLEANFALSEMATCH, "=" + FALSE);
+            statements.set(j, statement);
         }
     }
 

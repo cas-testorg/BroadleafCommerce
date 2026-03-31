@@ -51,24 +51,24 @@ public class DemoSqlServerSingleLineSqlCommandExtractor extends SingleLineSqlScr
     protected boolean alreadyRun = false;
 
     @Override
-    public String[] extractCommands(Reader reader, Dialect dialect) {
+    public List<String> extractCommands(Reader reader, Dialect dialect) {
         if (!alreadyRun) {
             alreadyRun = true;
             LOGGER.support("Converting hibernate.hbm2ddl.import_files sql statements for compatibility with SQL Server");
         }
 
-        String[] statements = super.extractCommands(reader, dialect);
+        List<String> statements = new ArrayList<>(super.extractCommands(reader, dialect));
         handleReplacements(statements);
 
         return statements;
     }
 
-    protected void handleReplacements(String[] statements) {
-        for (int j=0; j<statements.length; j++) {
-            statements[j] = replaceBoolean(statements[j]);
+    protected void handleReplacements(List<String> statements) {
+        for (int j=0; j<statements.size(); j++) {
+            String statement = replaceBoolean(statements.get(j));
             // Replace newline characters
-            statements[j] = statements[j].replaceAll(DemoPostgresSingleLineSqlCommandExtractor.NEWLINE_REPLACEMENT_REGEX, "' + CHAR(13) + CHAR(10) + '");
-
+            statement = statement.replaceAll(DemoPostgresSingleLineSqlCommandExtractor.NEWLINE_REPLACEMENT_REGEX, "' + CHAR(13) + CHAR(10) + '");
+            statements.set(j, statement);
         }
     }
 

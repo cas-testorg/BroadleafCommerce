@@ -24,6 +24,7 @@ import org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor;
 
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -35,10 +36,9 @@ import java.util.List;
 public class DemoHsqlSingleLineSqlCommandExtractor extends SingleLineSqlScriptExtractor {
 
     @Override
-    public String[] extractCommands(Reader reader, Dialect dialect) {
-        String[] commands = super.extractCommands(reader, dialect);
-        String[] newCommands = new String[commands.length];
-        int i = 0;
+    public List<String> extractCommands(Reader reader, Dialect dialect) {
+        List<String> commands = super.extractCommands(reader, dialect);
+        List<String> newCommands = new ArrayList<>();
         for (String command : commands) {
             String newCommand = command;
 
@@ -54,8 +54,7 @@ public class DemoHsqlSingleLineSqlCommandExtractor extends SingleLineSqlScriptEx
             //replace escaped double quotes (\") with encoded double quote
             newCommand = newCommand.replaceAll("\\\\\"", "' || CHAR(34) || '");
 
-            newCommands[i] = newCommand;
-            i++;
+            newCommands.add(newCommand);
         }
         return newCommands;
     }

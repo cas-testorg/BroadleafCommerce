@@ -47,10 +47,9 @@ public class DemoPostgresSingleLineSqlCommandExtractor extends SingleLineSqlScri
     private static final long serialVersionUID = 1L;
 
     @Override
-    public String[] extractCommands(Reader reader, Dialect dialect) {
-        String[] commands = super.extractCommands(reader, dialect);
-        String[] newCommands = new String[commands.length];
-        int i = 0;
+    public List<String> extractCommands(Reader reader, Dialect dialect) {
+        List<String> commands = super.extractCommands(reader, dialect);
+        List<String> newCommands = new ArrayList<>();
         for (String command : commands) {
             String newCommand = command;
 
@@ -80,8 +79,7 @@ public class DemoPostgresSingleLineSqlCommandExtractor extends SingleLineSqlScri
                     "CURRENT_TIMESTAMP", "date_trunc('second', CURRENT_TIMESTAMP)"
             );
 
-            newCommands[i] = newCommand;
-            i++;
+            newCommands.add(newCommand);
         }
         return newCommands;
     }
