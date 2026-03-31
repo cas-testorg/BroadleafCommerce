@@ -34,19 +34,6 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <testExcludes>
-                        <!-- Exclude admin-related tests due to Hibernate 7 incompatibility -->
-                        <exclude>**/security/service/Admin*Test.java</exclude>
-                        <exclude>**/security/service/dataprovider/Admin*DataProvider.java</exclude>
-                        <exclude>**/broadleafcommerce/test/helper/TestAdminRequestFilter.java</exclude>
-                        <exclude>**/broadleafcommerce/test/config/BroadleafAdminIntegrationTest.java</exclude>
-                    </testExcludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
