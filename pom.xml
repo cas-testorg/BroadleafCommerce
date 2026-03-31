@@ -369,7 +369,15 @@
         <module>common</module>
         <module>core</module>
         <module>integration</module>
-        <module>admin</module>
+        <!--
+        TEMPORARILY DISABLED: admin module requires major refactoring for Hibernate 7
+        The admin platform uses removed Hibernate internal APIs:
+        - org.hibernate.Criteria (old API removed in Hibernate 6+)
+        - Internal CriteriaBuilder implementation classes
+        - Internal type system APIs (TypeFactory, TypeResolver, SingleColumnType)
+        See HIBERNATE_7_MIGRATION_STATUS.md for details
+        -->
+        <!-- <module>admin</module> -->
     </modules>
     <dependencies>
         <dependency>
