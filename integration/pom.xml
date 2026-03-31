@@ -40,8 +40,8 @@
                         <!-- Exclude admin-related tests due to Hibernate 7 incompatibility -->
                         <exclude>**/security/service/Admin*Test.java</exclude>
                         <exclude>**/security/service/dataprovider/Admin*DataProvider.java</exclude>
-                        <exclude>**/test/helper/TestAdminRequestFilter.java</exclude>
-                        <exclude>**/test/config/BroadleafAdminIntegrationTest.java</exclude>
+                        <exclude>**/broadleafcommerce/test/helper/TestAdminRequestFilter.java</exclude>
+                        <exclude>**/broadleafcommerce/test/config/BroadleafAdminIntegrationTest.java</exclude>
                     </testExcludes>
                 </configuration>
             </plugin>
