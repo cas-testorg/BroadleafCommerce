@@ -25,8 +25,6 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.type.LongType;
-import org.hibernate.type.Type;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -66,16 +64,15 @@ public class UpdateExecutor {
      * </p>
      * An example looks like: 'UPDATE BLC_SNDBX_WRKFLW_ITEM SET SCHEDULED_DATE = ? WHERE WRKFLW_SNDBX_ITEM_ID IN (%s)'
      *
-     * @deprecated Highly recommended not to use this method. This method results in global L2 cache region clearing. Use {@link #executeUpdateQuery(EntityManager, String, String, Object[], Type[], List)} instead.
+     * @deprecated Highly recommended not to use this method. This method results in global L2 cache region clearing. Use {@link #executeUpdateQuery(EntityManager, String, String, Object[], List)} instead.
      * @param em The entity manager to use for the persistence operation
      * @param template the overall update sql template. The IN clause parameter should be written using 'IN (%s)'.
      * @param params any other params that are present in the sql template, other than the IN clause. Should be written using '?'. Should be in order. Can be null.
-     * @param types the {@link org.hibernate.type.Type} instances that identify the types for the params. Should be in order and match the length of params. Can be null.
      * @param ids the ids to include in the IN clause.
      * @return the total number of records updated in the database
      */
     @Deprecated
-    public static int executeUpdateQuery(EntityManager em, String template, Object[] params, Type[] types, List<Long> ids) {
+    public static int executeUpdateQuery(EntityManager em, String template, Object[] params, List<Long> ids) {
         int response = 0;
         List<Long[]> runs = buildRuns(ids);
         for (Long[] run : runs) {
@@ -84,12 +81,12 @@ public class UpdateExecutor {
             int counter = 1;
             if (!ArrayUtils.isEmpty(params)) {
                 for (Object param : params) {
-                    query.setParameter(counter, param, types[counter - 1]);
+                    query.setParameter(counter, param);
                     counter++;
                 }
             }
             for (Long id : run) {
-                query.setParameter(counter, id, LongType.INSTANCE);
+                query.setParameter(counter, id);
                 counter++;
             }
             FlushMode mode = em.unwrap(Session.class).getHibernateFlushMode();
@@ -113,12 +110,11 @@ public class UpdateExecutor {
      * @param em The entity manager to use for the persistence operation
      * @param template the overall update sql template. The IN clause parameter should be written using 'IN (%s)'.
      * @param tableSpace optionally provide the table being impacted by this query. This value allows Hibernate to limit the scope of cache region invalidation. Otherwise, if left null, Hibernate will invalidate every cache region, which is generally not desirable. An empty String can be used to signify that no region should be invalidated.
-     * @param params any other params that are present in the sql template, other than the IN clause. Should be written using '?'. Should be in order. Can be null.
-     * @param types the {@link org.hibernate.type.Type} instances that identify the types for the params. Should be in order and match the length of params. Can be null.
+     * @param params any other params that are present in the sql template, other than the IN clause. Should be written using '?'. Should be in order. Can be null. Hibernate 7 will infer the parameter types automatically.
      * @param ids the ids to include in the IN clause.
      * @return the total number of records updated in the database
      */
-    public static int executeUpdateQuery(EntityManager em, String template, String tableSpace, Object[] params, Type[] types, List<Long> ids) {
+    public static int executeUpdateQuery(EntityManager em, String template, String tableSpace, Object[] params, List<Long> ids) {
         int response = 0;
         List<Long[]> runs = buildRuns(ids);
         for (Long[] run : runs) {
@@ -131,12 +127,12 @@ public class UpdateExecutor {
             int counter = 1;
             if (!ArrayUtils.isEmpty(params)) {
                 for (Object param : params) {
-                    query.setParameter(counter, param, types[counter - 1]);
+                    query.setParameter(counter, param);
                     counter++;
                 }
             }
             for (Long id : run) {
-                query.setParameter(counter, id, LongType.INSTANCE);
+                query.setParameter(counter, id);
                 counter++;
             }
             FlushMode mode = em.unwrap(Session.class).getHibernateFlushMode();
