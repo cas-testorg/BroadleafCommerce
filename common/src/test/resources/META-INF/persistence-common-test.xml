@@ -24,6 +24,7 @@
              version="2.0">
     <persistence-unit name="blPU" transaction-type="RESOURCE_LOCAL">
         <non-jta-data-source>jdbc/test</non-jta-data-source>
+        <class>org.broadleafcommerce.common.config.domain.SystemPropertyImpl</class>
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <properties>
             <property name="hibernate.hbm2ddl.auto" value="create"/>
