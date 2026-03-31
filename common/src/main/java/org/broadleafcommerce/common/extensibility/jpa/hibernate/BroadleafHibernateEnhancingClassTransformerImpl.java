@@ -21,7 +21,6 @@ import org.broadleafcommerce.common.extensibility.jpa.copy.DirectCopyIgnorePatte
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
 
-import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +45,7 @@ public class BroadleafHibernateEnhancingClassTransformerImpl extends EnhancingCl
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
-    ) throws IllegalClassFormatException {
+    ) {
         String convertedClassName = className.replace('/', '.');
         boolean isValidPattern = true;
         List<DirectCopyIgnorePattern> matchedPatterns = new ArrayList<DirectCopyIgnorePattern>();

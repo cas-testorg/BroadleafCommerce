@@ -22,7 +22,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 
-import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
 
@@ -56,7 +55,6 @@ public class OptionalDirectCopyClassTransformer extends DirectCopyClassTransform
      * @param protectionDomain
      * @param classfileBuffer
      * @return
-     * @throws IllegalClassFormatException
      */
     @Override
     public byte[] transform(
@@ -65,7 +63,7 @@ public class OptionalDirectCopyClassTransformer extends DirectCopyClassTransform
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
-    ) throws IllegalClassFormatException {
+    ) {
 
         Boolean shouldProceed;
         try {

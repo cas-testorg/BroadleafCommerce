@@ -77,7 +77,7 @@ public class UpdateExecutor {
         List<Long[]> runs = buildRuns(ids);
         for (Long[] run : runs) {
             String queryString = String.format(template, buildInClauseTemplate(run.length));
-            NativeQuery<?> query = em.unwrap(Session.class).createSQLQuery(queryString);
+            NativeQuery<?> query = em.unwrap(Session.class).createNativeQuery(queryString);
             int counter = 1;
             if (!ArrayUtils.isEmpty(params)) {
                 for (Object param : params) {
@@ -90,7 +90,7 @@ public class UpdateExecutor {
                 counter++;
             }
             FlushMode mode = em.unwrap(Session.class).getHibernateFlushMode();
-            em.unwrap(Session.class).setFlushMode(FlushMode.MANUAL);
+            em.unwrap(Session.class).setHibernateFlushMode(FlushMode.MANUAL);
             try {
                 response += query.executeUpdate();
             } finally {
@@ -119,7 +119,7 @@ public class UpdateExecutor {
         List<Long[]> runs = buildRuns(ids);
         for (Long[] run : runs) {
             String queryString = String.format(template, buildInClauseTemplate(run.length));
-            NativeQuery<?> query = em.unwrap(Session.class).createSQLQuery(queryString);
+            NativeQuery<?> query = em.unwrap(Session.class).createNativeQuery(queryString);
             //only check for null - an empty string is a valid value for tableSpace
             if (tableSpace != null) {
                 query.addSynchronizedQuerySpace(tableSpace);
@@ -136,7 +136,7 @@ public class UpdateExecutor {
                 counter++;
             }
             FlushMode mode = em.unwrap(Session.class).getHibernateFlushMode();
-            em.unwrap(Session.class).setFlushMode(FlushMode.MANUAL);
+            em.unwrap(Session.class).setHibernateFlushMode(FlushMode.MANUAL);
             try {
                 response += query.executeUpdate();
             } finally {
