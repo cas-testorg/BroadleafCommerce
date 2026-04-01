@@ -172,15 +172,17 @@ public class DefaultFieldMetadataProvider extends BasicFieldMetadataProvider {
             Column column = null;
             for (Property property : addMetadataFromMappingDataRequest.getComponentProperties()) {
                 if (property.getName().equals(addMetadataFromMappingDataRequest.getPropertyName())) {
-                    Object columnObject = property.getColumnIterator().next();
-                    if (columnObject instanceof Column) {
-                        column = (Column) columnObject;
+                    if (!property.getColumns().isEmpty()) {
+                        Object columnObject = property.getColumns().get(0);
+                        if (columnObject instanceof Column) {
+                            column = (Column) columnObject;
+                        }
                     }
                     break;
                 }
             }
             if (column != null) {
-                fieldMetadata.setLength(column.getLength());
+                fieldMetadata.setLength((int) column.getLength());
                 fieldMetadata.setScale(column.getScale());
                 fieldMetadata.setPrecision(column.getPrecision());
                 fieldMetadata.setRequired(!column.isNullable());

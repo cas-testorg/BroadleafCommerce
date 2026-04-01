@@ -57,10 +57,12 @@ public class FieldPathBuilder {
             checkPiece: {
                 if (j == 0) {
                     try {
-                        Attribute<?, ?> attribute = root.getModel().getAttribute(piece);
-                        if (attribute instanceof PluralAttribute) {
-                            associationPath.add(piece);
-                            break checkPiece;
+                        if (root.getModel() instanceof ManagedType) {
+                            Attribute<?, ?> attribute = ((ManagedType<?, ?>) root.getModel()).getAttribute(piece);
+                            if (attribute instanceof PluralAttribute) {
+                                associationPath.add(piece);
+                                break checkPiece;
+                            }
                         }
                     } catch (IllegalArgumentException e) {
                         // Attribute doesn't exist, treat as basic property

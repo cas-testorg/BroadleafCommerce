@@ -1095,12 +1095,10 @@ public class DynamicEntityDaoImpl implements DynamicEntityDao, ApplicationContex
         propertyTypes.add(idType);
 
         PersistentClass persistentClass = getPersistentClass(targetClass.getName());
-        Iterator testIter = persistentClass.getPropertyIterator();
         List<Property> propertyList = new ArrayList<>();
 
         //check the properties for problems
-        while (testIter.hasNext()) {
-            Property property = (Property) testIter.next();
+        for (Property property : persistentClass.getPropertyClosure()) {
             if (property.getName().contains(".")) {
                 throw new IllegalArgumentException("Properties from entities that utilize a period character ('.') in their name are incompatible with this system. The property name in question is: (" + property.getName() + ") from the class: (" + targetClass.getName() + ")");
             }
@@ -1671,11 +1669,9 @@ public class DynamicEntityDaoImpl implements DynamicEntityDao, ApplicationContex
             property = persistentClass.getProperty(prefix + propertyName);
         }
 
-        Iterator componentPropertyIterator = ((org.hibernate.mapping.Component) property.getValue()).getPropertyIterator();
         List<Property> componentPropertyList = new ArrayList<>();
-
-        while (componentPropertyIterator.hasNext()) {
-            componentPropertyList.add((Property) componentPropertyIterator.next());
+        for (Property componentProperty : ((org.hibernate.mapping.Component) property.getValue()).getPropertyClosure()) {
+            componentPropertyList.add(componentProperty);
         }
 
         Map<String, FieldMetadata> newFields = new HashMap<>();

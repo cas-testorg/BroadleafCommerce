@@ -149,7 +149,11 @@ public class MapFieldsFieldMetadataProvider extends DefaultFieldMetadataProvider
                         Class<?> clazz = (Class<?>) pType.getActualTypeArguments()[1];
                         Class<?>[] entities = addMetadataFromFieldTypeRequest.getDynamicEntityDao().getAllPolymorphicEntitiesFromCeiling(clazz);
                         if (!ArrayUtils.isEmpty(entities)) {
-                            myType = typeLocator.entity(entities[entities.length-1]);
+                            try {
+                                myType = typeConfiguration.getBasicTypeRegistry().getRegisteredType(entities[entities.length-1]);
+                            } catch (Exception e) {
+                                // Ignore, will fail later with better error message
+                            }
                         }
                     }
                 }
