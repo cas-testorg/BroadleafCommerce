@@ -45,7 +45,7 @@ public class NullClassTransformer implements BroadleafClassTransformer {
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
-    ) throws IllegalClassFormatException {
+    )  {
         return null;
     }
 

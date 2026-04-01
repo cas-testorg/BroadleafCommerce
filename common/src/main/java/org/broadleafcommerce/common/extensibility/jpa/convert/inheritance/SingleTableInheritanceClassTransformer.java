@@ -97,7 +97,7 @@ public class SingleTableInheritanceClassTransformer extends AbstractClassTransfo
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
-    ) throws IllegalClassFormatException {
+    )  {
         // Lambdas and anonymous methods in Java 8 do not have a class name defined and so no transformation should be done
         if (className == null) {
             return null;
@@ -174,7 +174,7 @@ public class SingleTableInheritanceClassTransformer extends AbstractClassTransfo
                 return bos.toByteArray();
             } catch (Exception ex) {
                 ex.printStackTrace();
-                throw new IllegalClassFormatException("Unable to convert " + convertedClassName
+                throw new RuntimeException("Unable to convert " + convertedClassName
                         + " to a SingleTable inheritance strategy: " + ex.getMessage());
             }
         } else {

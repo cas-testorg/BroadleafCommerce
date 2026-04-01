@@ -72,7 +72,7 @@ public class ConditionalFieldAnnotationsClassTransformer extends AbstractClassTr
      * @param protectionDomain
      * @param classfileBuffer
      * @return
-     * @throws IllegalClassFormatException
+     * @
      */
     @Override
     public byte[] transform(
@@ -81,7 +81,7 @@ public class ConditionalFieldAnnotationsClassTransformer extends AbstractClassTr
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
-    ) throws IllegalClassFormatException {
+    )  {
 
         // Lambdas and anonymous methods in Java 8 do not have a class name defined and so no transformation should be done
         if (className == null) {
@@ -168,7 +168,7 @@ public class ConditionalFieldAnnotationsClassTransformer extends AbstractClassTr
             error.printStackTrace();
             throw error;
         } catch (Exception e) {
-            throw new IllegalClassFormatException("Unable to transform class");
+            throw new RuntimeException("Unable to transform class");
         } finally {
             if (clazz != null) {
                 try {

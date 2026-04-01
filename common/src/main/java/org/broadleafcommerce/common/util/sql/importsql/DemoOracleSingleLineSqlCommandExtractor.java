@@ -19,7 +19,7 @@ package org.broadleafcommerce.common.util.sql.importsql;
 
 import org.broadleafcommerce.common.logging.SupportLogManager;
 import org.broadleafcommerce.common.logging.SupportLogger;
-import org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor;
+import org.broadleafcommerce.common.util.sql.importsql.SingleLineSqlCommandExtractor;
 
 import java.io.Reader;
 import java.util.ArrayList;

@@ -89,7 +89,7 @@ public class QueryConfigurationClassTransformer implements BroadleafClassTransfo
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
-    ) throws IllegalClassFormatException {
+    )  {
         if (className == null || isExecuted) {
             return null;
         }
@@ -121,7 +121,7 @@ public class QueryConfigurationClassTransformer implements BroadleafClassTransfo
                 return bos.toByteArray();
             } catch (Exception e) {
                 e.printStackTrace();
-                throw new IllegalClassFormatException("Unable to convert " + convertedClassName
+                throw new RuntimeException("Unable to convert " + convertedClassName
                         + " to a SingleTable inheritance strategy: " + e.getMessage());
             }
         } else {

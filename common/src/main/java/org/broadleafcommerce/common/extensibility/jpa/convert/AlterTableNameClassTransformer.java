@@ -110,7 +110,7 @@ public class AlterTableNameClassTransformer extends AbstractClassTransformer imp
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
-    ) throws IllegalClassFormatException {
+    )  {
         // Lambdas and anonymous methods in Java 8 do not have a class name defined and so no transformation should be done
         if (className == null || StringUtils.isBlank(getTargetedClass()) || StringUtils.isBlank(getTableName())) {
             return null;
@@ -139,7 +139,7 @@ public class AlterTableNameClassTransformer extends AbstractClassTransformer imp
 
             } catch (Exception ex) {
                 ex.printStackTrace();
-                throw new IllegalClassFormatException("Unable to convert " + convertedClassName
+                throw new RuntimeException("Unable to convert " + convertedClassName
                         + " to a SingleTable inheritance strategy: " + ex.getMessage());
             }
         }

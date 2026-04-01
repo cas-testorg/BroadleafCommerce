@@ -46,7 +46,7 @@ public class BroadleafHibernateEnhancingClassTransformerImpl extends EnhancingCl
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
-    ) throws IllegalClassFormatException {
+    )  {
         String convertedClassName = className.replace('/', '.');
         boolean isValidPattern = true;
         List<DirectCopyIgnorePattern> matchedPatterns = new ArrayList<DirectCopyIgnorePattern>();
@@ -68,7 +68,11 @@ public class BroadleafHibernateEnhancingClassTransformerImpl extends EnhancingCl
         }
 
         if (isValidPattern) {
-            return super.transform(loader, className, classBeingRedefined, protectionDomain, classfileBuffer);
+            try {
+                return super.transform(loader, className, classBeingRedefined, protectionDomain, classfileBuffer);
+            } catch (jakarta.persistence.spi.TransformerException e) {
+                throw new RuntimeException("Error transforming class: " + className, e);
+            }
         }
         return null;
     }

@@ -70,7 +70,7 @@ public class EntityMarkerClassTransformer extends AbstractClassTransformer imple
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
-    ) throws IllegalClassFormatException {
+    )  {
         // Lambdas and anonymous methods in Java 8 do not have a class name defined and so no transformation should be done
         if (className == null) {
             return null;
@@ -103,7 +103,7 @@ public class EntityMarkerClassTransformer extends AbstractClassTransformer imple
             }
         } catch (Exception e) {
             LOG.error("An error has occurred ", e);
-            throw new IllegalClassFormatException("Unable to mark " + convertedClassName + " as transformed.");
+            throw new RuntimeException("Unable to mark " + convertedClassName + " as transformed.", e);
         }
 
         // We don't need to transform anything, so we'll return null

@@ -56,7 +56,7 @@ public class OptionalDirectCopyClassTransformer extends DirectCopyClassTransform
      * @param protectionDomain
      * @param classfileBuffer
      * @return
-     * @throws IllegalClassFormatException
+     * @
      */
     @Override
     public byte[] transform(
@@ -65,7 +65,7 @@ public class OptionalDirectCopyClassTransformer extends DirectCopyClassTransform
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
-    ) throws IllegalClassFormatException {
+    )  {
 
         Boolean shouldProceed;
         try {
