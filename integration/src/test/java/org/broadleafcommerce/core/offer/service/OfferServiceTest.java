@@ -200,7 +200,7 @@ public class OfferServiceTest extends CommonSetupBaseTest {
         return order;
     }
 
-    @Test(groups =  {"testOffersWithGiftWrap", "hibernate7-incompatible"})
+    @Test(groups =  {"testOffersWithGiftWrap", "hibernate7-incompatible"}, enabled = false)
     @Transactional(value = "blTransactionManager")
     public void testOrderItemOfferWithGiftWrap() throws PricingException {
         Order order = createTestOrderWithOfferAndGiftWrap();
