@@ -112,6 +112,7 @@ public class CategoryDaoImpl implements CategoryDao {
 
     @Override
     @Deprecated(forRemoval = true)
+    @SuppressWarnings("removal")
     public Category readCategoryByName(String categoryName) {
         Query query = em.createNamedQuery("BC_READ_CATEGORY_BY_NAME");
         query.setParameter("categoryName", categoryName);

@@ -18,6 +18,11 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
 <suite name="BroadleafCommerce Test Suite" verbose="2" parallel="false">
     <test name="commerce-integrationtest">
+        <groups>
+            <run>
+                <exclude name="hibernate7-incompatible"/>
+            </run>
+        </groups>
         <packages>
             <package name="org.broadleafcommerce.core.catalog.dao"></package>
             <package name="org.broadleafcommerce.core.catalog.service"></package>
@@ -38,10 +43,5 @@
             <package name="org.broadleafcommerce.test"></package>
             <package name="org.broadleafcommerce.common.time.time"></package>
         </packages>
-        <groups>
-            <run>
-                <exclude name="hibernate7-incompatible"/>
-            </run>
-        </groups>
     </test>
 </suite>

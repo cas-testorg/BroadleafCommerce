@@ -51,7 +51,7 @@ public class EmailTrackingImpl implements EmailTracking {
 
     @Id
     @GeneratedValue(generator = "EmailTrackingId")
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     @GenericGenerator(
             name = "EmailTrackingId",
             strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",

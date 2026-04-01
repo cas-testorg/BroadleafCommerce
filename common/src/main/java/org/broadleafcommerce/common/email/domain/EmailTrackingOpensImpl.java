@@ -50,7 +50,7 @@ public class EmailTrackingOpensImpl implements EmailTrackingOpens {
 
     @Id
     @GeneratedValue(generator = "OpenId")
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     @GenericGenerator(
             name = "OpenId",
             strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",
