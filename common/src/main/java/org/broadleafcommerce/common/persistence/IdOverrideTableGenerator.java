@@ -17,11 +17,9 @@
  */
 package org.broadleafcommerce.common.persistence;
 
-import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.enhanced.TableGenerator;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -96,12 +94,12 @@ public class IdOverrideTableGenerator extends TableGenerator {
     }
 
     @Override
-    public void configure(Type type, Properties params, ServiceRegistry registry) throws MappingException {
+    public void configure(GeneratorCreationContext creationContext, Properties params) {
         params.putIfAbsent("table_name", "SEQUENCE_GENERATOR");
         params.putIfAbsent("segment_column_name", DEFAULT_SEGMENT_COLUMN_NAME);
         params.putIfAbsent("value_column_name", DEFAULT_VALUE_COLUMN_NAME);
         params.putIfAbsent("increment_size", DEFAULT_INCREMENT_SIZE);
-        super.configure(type, params, registry);
+        super.configure(creationContext, params);
         entityName = (String) params.get(ENTITY_NAME_PARAM);
     }
 
