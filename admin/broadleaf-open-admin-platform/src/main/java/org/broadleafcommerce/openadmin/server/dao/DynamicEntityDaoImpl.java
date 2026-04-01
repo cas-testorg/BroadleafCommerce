@@ -49,7 +49,6 @@ import org.broadleafcommerce.openadmin.server.dao.provider.metadata.request.Late
 import org.broadleafcommerce.openadmin.server.service.persistence.module.FieldManager;
 import org.broadleafcommerce.openadmin.server.service.persistence.validation.FieldNamePropertyValidator;
 import org.broadleafcommerce.openadmin.server.service.type.MetadataProviderResponse;
-import org.hibernate.Criteria;
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.mapping.PersistentClass;
@@ -155,11 +154,6 @@ public class DynamicEntityDaoImpl implements DynamicEntityDao, ApplicationContex
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
-    }
-
-    @Override
-    public Criteria createCriteria(Class<?> entityClass) {
-        return getStandardEntityManager().unwrap(Session.class).createCriteria(entityClass);
     }
 
     @Override

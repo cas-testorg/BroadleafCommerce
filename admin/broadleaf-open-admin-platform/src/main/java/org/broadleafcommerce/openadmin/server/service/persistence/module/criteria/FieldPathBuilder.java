@@ -20,14 +20,13 @@ package org.broadleafcommerce.openadmin.server.service.persistence.module.criter
 import org.apache.commons.lang3.StringUtils;
 import org.broadleafcommerce.common.util.dao.DynamicDaoHelper;
 import org.broadleafcommerce.common.util.dao.DynamicDaoHelperImpl;
-import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.path.PluralAttributePath;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.From;
@@ -47,6 +46,7 @@ public class FieldPathBuilder {
 
     protected CriteriaQuery criteria;
     protected List<Predicate> restrictions;
+    protected EntityManager entityManager;
 
     public FieldPath getFieldPath(From root, String fullPropertyName) {
         String[] pieces = fullPropertyName.split("\\.");
@@ -98,8 +98,7 @@ public class FieldPathBuilder {
                 // We weren't able to resolve the requested piece, likely because it's in a polymoprhic version
                 // of the path we're currently on. Let's see if there's any polymoprhic version of our class to
                 // use instead.
-                SessionFactoryImpl em = ((CriteriaBuilderImpl) builder).getEntityManagerFactory();
-                Metamodel mm = em.getMetamodel();
+                Metamodel mm = entityManager.getMetamodel();
                 boolean found = false;
 
                 Class<?>[] polyClasses = dynamicDaoHelper.getAllPolymorphicEntitiesFromCeiling(
@@ -162,6 +161,14 @@ public class FieldPathBuilder {
 
     public void setRestrictions(List<Predicate> restrictions) {
         this.restrictions = restrictions;
+    }
+
+    public EntityManager getEntityManager() {
+        return entityManager;
+    }
+
+    public void setEntityManager(EntityManager entityManager) {
+        this.entityManager = entityManager;
     }
 
 }
