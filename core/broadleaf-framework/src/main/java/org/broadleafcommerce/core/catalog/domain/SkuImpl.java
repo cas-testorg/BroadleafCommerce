@@ -230,7 +230,7 @@ public class SkuImpl implements Sku, SkuAdminPresentation {
     //as it now relates on CLOB. Probably you can change signature and pass old/new values
     //and check them for length, if someone exceeds some value (255?) consider it large
     @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    
     @Column(name = "LONG_DESCRIPTION", length = Integer.MAX_VALUE - 1)
     @AdminPresentation(friendlyName = "SkuImpl_Sku_Large_Description",
             group = GroupName.General, order = FieldOrder.LONG_DESCRIPTION,

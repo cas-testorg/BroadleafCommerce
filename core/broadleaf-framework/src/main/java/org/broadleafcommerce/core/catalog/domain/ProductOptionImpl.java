@@ -150,7 +150,7 @@ public class ProductOptionImpl implements ProductOption, AdminMainEntity, Produc
             addType = AddMethodType.PERSIST)
     protected List<ProductOptionValue> allowedValues = new ArrayList<>();
     @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    
     @Column(name = "LONG_DESCRIPTION", length = Integer.MAX_VALUE - 1)
     @AdminPresentation(friendlyName = "productOption_description",
             group = GroupName.General,

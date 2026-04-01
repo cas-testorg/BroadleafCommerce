@@ -94,7 +94,7 @@ public class SkuFeeImpl implements SkuFee {
     protected Boolean taxable = Boolean.FALSE;
 
     @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    
     @Column(name = "EXPRESSION", length = Integer.MAX_VALUE - 1)
     protected String expression;
 

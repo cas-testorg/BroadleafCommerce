@@ -115,7 +115,7 @@ public class PaymentTransactionImpl implements PaymentTransaction {
 
     @Column(name = "RAW_RESPONSE", length = Integer.MAX_VALUE - 1)
     @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    
     @AdminPresentation(friendlyName = "PaymentTransactionImpl_Raw_Response")
     protected String rawResponse;
 
@@ -144,9 +144,9 @@ public class PaymentTransactionImpl implements PaymentTransaction {
 
     @ElementCollection
     @MapKeyColumn(name="FIELD_NAME")
-    @MapKeyType(@Type(type = "java.lang.String"))
+    
     @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    
     @Column(name="FIELD_VALUE", length = Integer.MAX_VALUE - 1)
     @CollectionTable(name="BLC_TRANS_ADDITNL_FIELDS", joinColumns=@JoinColumn(name="PAYMENT_TRANSACTION_ID"))
     @BatchSize(size = 50)

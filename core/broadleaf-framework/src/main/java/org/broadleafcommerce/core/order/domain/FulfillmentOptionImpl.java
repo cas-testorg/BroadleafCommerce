@@ -81,7 +81,7 @@ public class FulfillmentOptionImpl implements FulfillmentOption {
     protected String name;
 
     @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    
     @Column(name = "LONG_DESCRIPTION", length = Integer.MAX_VALUE - 1)
     @AdminPresentation(friendlyName = "FulfillmentOptionImpl_longDescription",
             order = Presentation.FieldOrder.DESCRIPTION, translatable = true)
