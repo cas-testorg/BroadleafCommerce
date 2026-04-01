@@ -68,6 +68,7 @@ public class CsrfFilter extends GenericFilterBean {
         boolean excludedRequestFound = false;
         if (excludedRequestPatterns != null && excludedRequestPatterns.size() > 0) {
             for (String pattern : excludedRequestPatterns) {
+                @SuppressWarnings("deprecation")
                 RequestMatcher matcher = new AntPathRequestMatcher(pattern);
                 if (matcher.matches(request)) {
                     excludedRequestFound = true;

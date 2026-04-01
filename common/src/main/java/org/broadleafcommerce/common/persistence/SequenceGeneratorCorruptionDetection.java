@@ -96,6 +96,7 @@ public class SequenceGeneratorCorruptionDetection implements ApplicationListener
         }
     }
 
+    @SuppressWarnings("deprecation")
     protected void patchSequenceGeneratorInconsistencies(EntityManager em, Session session) {
         SessionFactory sessionFactory = session.getSessionFactory();
         for (EntityType<?> item : sessionFactory.getMetamodel().getEntities()) {

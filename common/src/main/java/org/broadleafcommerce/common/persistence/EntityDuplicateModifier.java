@@ -20,6 +20,7 @@ package org.broadleafcommerce.common.persistence;
 /**
  * @deprecated Implement {@link EntityDuplicationHelper} instead
  */
+@Deprecated
 public interface EntityDuplicateModifier<T> {
 
     void modifyInitialDuplicateState(T copy);
