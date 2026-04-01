@@ -33,6 +33,7 @@
             <property name="hibernate.id.new_generator_mappings" value="true"/>
             <property name="hibernate.id.optimizer.pooled.prefer_lo" value="true"/>
             <property name="hibernate.enable_lazy_load_no_trans" value="true"/>
+            <property name="hibernate.jdbc.batch_versioned_data" value="true"/>
         </properties>
     </persistence-unit>
     
@@ -46,9 +47,10 @@
             <property name="hibernate.id.new_generator_mappings" value="true"/>
             <property name="hibernate.id.optimizer.pooled.prefer_lo" value="true"/>
             <property name="hibernate.enable_lazy_load_no_trans" value="true"/>
+            <property name="hibernate.jdbc.batch_versioned_data" value="true"/>
         </properties>
     </persistence-unit>
-    
+
     <persistence-unit name="blSecurePU" transaction-type="RESOURCE_LOCAL">
         <non-jta-data-source>jdbc/testSecure</non-jta-data-source>
         <exclude-unlisted-classes/>
@@ -59,6 +61,7 @@
             <property name="hibernate.id.new_generator_mappings" value="true"/>
             <property name="hibernate.id.optimizer.pooled.prefer_lo" value="true"/>
             <property name="hibernate.enable_lazy_load_no_trans" value="true"/>
+            <property name="hibernate.jdbc.batch_versioned_data" value="true"/>
         </properties>
     </persistence-unit>
 </persistence>

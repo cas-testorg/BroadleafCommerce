@@ -69,6 +69,7 @@ public class SystemPropertyImpl implements SystemProperty, AdminMainEntity, Syst
 
     @Id
     @GeneratedValue(generator = "SystemPropertyId")
+    @SuppressWarnings("deprecation")
     @GenericGenerator(
             name = "SystemPropertyId",
             strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",
