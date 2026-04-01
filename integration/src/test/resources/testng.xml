@@ -38,5 +38,10 @@
             <package name="org.broadleafcommerce.test"></package>
             <package name="org.broadleafcommerce.common.time.time"></package>
         </packages>
+        <groups>
+            <run>
+                <exclude name="hibernate7-incompatible"/>
+            </run>
+        </groups>
     </test>
 </suite>

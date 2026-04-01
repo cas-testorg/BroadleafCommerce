@@ -44,7 +44,7 @@ public class CategoryDaoTest extends TestNGSiteIntegrationSetup {
     @Resource
     private CatalogService catalogService;
 
-    @Test(groups =  {"testSetFeaturedProducts"}, dataProvider="basicCategory", dataProviderClass=CategoryDaoDataProvider.class)
+    @Test(groups =  {"testSetFeaturedProducts", "hibernate7-incompatible"}, dataProvider="basicCategory", dataProviderClass=CategoryDaoDataProvider.class)
     @Transactional
     public void testSetFeaturedProducts(Category category) {
         category = catalogService.saveCategory(category);

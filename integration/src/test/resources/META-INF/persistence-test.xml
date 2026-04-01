@@ -33,7 +33,6 @@
             <property name="hibernate.id.new_generator_mappings" value="true"/>
             <property name="hibernate.id.optimizer.pooled.prefer_lo" value="true"/>
             <property name="hibernate.enable_lazy_load_no_trans" value="true"/>
-            <property name="hibernate.connection.isolation" value="2"/>
         </properties>
     </persistence-unit>
     
@@ -47,7 +46,6 @@
             <property name="hibernate.id.new_generator_mappings" value="true"/>
             <property name="hibernate.id.optimizer.pooled.prefer_lo" value="true"/>
             <property name="hibernate.enable_lazy_load_no_trans" value="true"/>
-            <property name="hibernate.connection.isolation" value="2"/>
         </properties>
     </persistence-unit>
 
@@ -61,7 +59,6 @@
             <property name="hibernate.id.new_generator_mappings" value="true"/>
             <property name="hibernate.id.optimizer.pooled.prefer_lo" value="true"/>
             <property name="hibernate.enable_lazy_load_no_trans" value="true"/>
-            <property name="hibernate.connection.isolation" value="2"/>
         </properties>
     </persistence-unit>
 </persistence>

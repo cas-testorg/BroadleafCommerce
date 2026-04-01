@@ -96,7 +96,7 @@ public class OfferAuditTest extends CommonSetupBaseTest {
     }
 
 
-    @Test(groups =  {"testPercentageOffOffer"}, dependsOnGroups = { "offerCreateSku1" })
+    @Test(groups =  {"testPercentageOffOffer", "hibernate7-incompatible"}, dependsOnGroups = { "offerCreateSku1" })
     @Transactional
     public void testMinimumDaysPerUsageAudit() throws Exception {
 
