@@ -20,7 +20,6 @@ package org.broadleafcommerce.openadmin.server.service.persistence.module.criter
 import org.apache.commons.lang3.StringUtils;
 import org.broadleafcommerce.common.util.dao.DynamicDaoHelper;
 import org.broadleafcommerce.common.util.dao.DynamicDaoHelperImpl;
-import org.hibernate.query.criteria.internal.path.PluralAttributePath;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +35,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Metamodel;
+import jakarta.persistence.metamodel.PluralAttribute;
 
 /**
  * @author Jeff Fischer
@@ -56,10 +56,14 @@ public class FieldPathBuilder {
         for (String piece : pieces) {
             checkPiece: {
                 if (j == 0) {
-                    Path path = root.get(piece);
-                    if (path instanceof PluralAttributePath) {
-                        associationPath.add(piece);
-                        break checkPiece;
+                    try {
+                        Attribute<?, ?> attribute = root.getModel().getAttribute(piece);
+                        if (attribute instanceof PluralAttribute) {
+                            associationPath.add(piece);
+                            break checkPiece;
+                        }
+                    } catch (IllegalArgumentException e) {
+                        // Attribute doesn't exist, treat as basic property
                     }
                 }
                 basicProperties.add(piece);
@@ -126,7 +130,13 @@ public class FieldPathBuilder {
                 }
             }
 
-            if (path.getParentPath() != null && path.getParentPath().getJavaType().isAnnotationPresent(Embeddable.class) && path instanceof PluralAttributePath) {
+            boolean isPlural = false;
+            try {
+                isPlural = path.getModel() instanceof PluralAttribute;
+            } catch (IllegalStateException e) {
+                // Path doesn't have a model, skip check
+            }
+            if (path.getParentPath() != null && path.getParentPath().getJavaType().isAnnotationPresent(Embeddable.class) && isPlural) {
                 //We need a workaround for this problem until it is resolved in Hibernate (loosely related to and likely resolved by https://hibernate.atlassian.net/browse/HHH-8802)
                 //We'll throw a specialized exception (and handle in an alternate flow for calls from BasicPersistenceModule)
                 throw new CriteriaConversionException(String.format("Unable to create a JPA criteria Path through an @Embeddable object to a collection that resides therein (%s)", fieldPath.getTargetProperty()), fieldPath);
