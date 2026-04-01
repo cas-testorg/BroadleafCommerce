@@ -28,7 +28,6 @@ import org.broadleafcommerce.common.presentation.AdminPresentation;
 import org.broadleafcommerce.openadmin.audit.AdminAuditableListener;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -86,7 +85,6 @@ public class PageFieldImpl implements PageField, ProfileEntity {
 
     @Column(name = "LOB_VALUE", length = Integer.MAX_VALUE-1)
     @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
     @AdminPresentation
     protected String lobValue;
 

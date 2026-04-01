@@ -30,7 +30,6 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -86,7 +85,6 @@ public class StructuredContentItemCriteriaImpl
     protected Integer quantity;
 
     @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
     @Column(name = "ORDER_ITEM_MATCH_RULE", length = Integer.MAX_VALUE - 1)
     @AdminPresentation(friendlyName = "StructuredContentItemCriteriaImpl_Order_Item_Match_Rule",
             group = "StructuredContentItemCriteriaImpl_Description",
