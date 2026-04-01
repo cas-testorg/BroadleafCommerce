@@ -1670,7 +1670,7 @@ public class DynamicEntityDaoImpl implements DynamicEntityDao, ApplicationContex
         }
 
         List<Property> componentPropertyList = new ArrayList<>();
-        for (Property componentProperty : ((org.hibernate.mapping.Component) property.getValue()).getPropertyClosure()) {
+        for (Property componentProperty : ((org.hibernate.mapping.Component) property.getValue()).getProperties()) {
             componentPropertyList.add(componentProperty);
         }
 

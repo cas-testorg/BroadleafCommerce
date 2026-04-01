@@ -58,7 +58,7 @@ public class FieldPathBuilder {
                 if (j == 0) {
                     try {
                         if (root.getModel() instanceof ManagedType) {
-                            Attribute<?, ?> attribute = ((ManagedType<?, ?>) root.getModel()).getAttribute(piece);
+                            Attribute<?, ?> attribute = ((ManagedType<?>) root.getModel()).getAttribute(piece);
                             if (attribute instanceof PluralAttribute) {
                                 associationPath.add(piece);
                                 break checkPiece;
