@@ -33,11 +33,68 @@ jobs:
           fetch-depth: 0
 
       # IMPORTANT: no Maven cache => avoid "No space left on device" on caching
-      - name: Set up JDK 17 (no cache)
+      - name: Resolve Java (.java-version or Maven compiler level)
+        id: java
+        shell: bash
+        run: |
+          set -euo pipefail
+          normalize_java() {
+            local v="$1"
+            v="${v%%-*}"
+            v="${v%%+*}"
+            if [[ "$v" =~ ^1\.([0-9]+)$ ]]; then
+              echo "${BASH_REMATCH[1]}"
+            elif [[ "$v" =~ ^([0-9]+)(\.[0-9]+)*$ ]]; then
+              echo "${BASH_REMATCH[1]}"
+            else
+              echo ""
+            fi
+          }
+
+          for candidate in .java-version src/.java-version; do
+            if [ -f "$candidate" ]; then
+              raw=$(tr -d '\r\n\t ' < "$candidate" | head -c 64)
+              jv=$(normalize_java "$raw")
+              if [ -n "$jv" ]; then
+                echo "Using Java from ${candidate}: ${jv}"
+                echo "setup_mode=file" >> "$GITHUB_OUTPUT"
+                echo "java_version=${jv}" >> "$GITHUB_OUTPUT"
+                echo "java_version_file=${candidate}" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            fi
+          done
+
+          echo "No .java-version; deriving Java level from Maven POM compiler settings"
+          max=0
+          while IFS= read -r line; do
+            [ -z "${line:-}" ] && continue
+            n=$(normalize_java "$line")
+            [ -z "${n:-}" ] && continue
+            if [ "$n" -gt "$max" ]; then max=$n; fi
+          done < <(
+            {
+              grep -RhoP '<release>\K[0-9]+' --include='pom.xml' . 2>/dev/null || true
+              grep -RhoP '<maven\.compiler\.release>\K[0-9]+' --include='pom.xml' . 2>/dev/null || true
+              grep -RhoP '<java\.version>\K[^<]+' --include='pom.xml' . 2>/dev/null || true
+              grep -RhoP '<(source|target)>\K[0-9.]+' --include='pom.xml' . 2>/dev/null || true
+            }
+          )
+
+          if [ "$max" -eq 0 ]; then
+            echo "Could not determine Java version. Add .java-version or maven-compiler-plugin <release> (and related) in a pom.xml."
+            exit 1
+          fi
+
+          echo "Highest Java level from POMs: ${max}"
+          echo "setup_mode=pom" >> "$GITHUB_OUTPUT"
+          echo "java_version=${max}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up JDK (no cache)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: ${{ steps.java.outputs.java_version }}
 
       - name: Build and test
         shell: bash
@@ -141,6 +198,7 @@ jobs:
             echo "| Run | ${{ github.run_id }} (attempt ${{ github.run_attempt }}) |"
             echo "| Ref | \`${{ github.ref }}\` |"
             echo "| SHA | \`${{ github.sha }}\` |"
+            echo "| JDK (resolved) | ${{ steps.java.outputs.java_version }} (${{ steps.java.outputs.setup_mode }}) |"
             echo "| Job status | **${{ job.status }}** |"
             echo ""
             echo "Build log is sent to CodeLogic via \`send_build_info\` when credentials are configured."
