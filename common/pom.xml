@@ -142,11 +142,11 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.hibernate.orm</groupId>
-            <artifactId>hibernate-core</artifactId>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core-jakarta</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.hibernate.orm</groupId>
+            <groupId>org.hibernate</groupId>
             <artifactId>hibernate-jcache</artifactId>
         </dependency>
         <dependency>
@@ -171,8 +171,8 @@
             <artifactId>easymockclassextension</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.hibernate.orm</groupId>
-            <artifactId>hibernate-envers</artifactId>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-envers-jakarta</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.mail</groupId>
@@ -479,9 +479,9 @@
             <artifactId>javassist</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.cache</groupId>
-            <artifactId>jakarta.cache-api</artifactId>
-            <version>3.0.0</version>
+            <groupId>javax.cache</groupId>
+            <artifactId>cache-api</artifactId>
+            <version>1.1.0</version>
         </dependency>
     </dependencies>
 </project>

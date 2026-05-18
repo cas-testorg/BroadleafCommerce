@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.solrj.jetty.HttpJettySolrClient;
 import org.apache.solr.client.solrj.request.CollectionAdminRequest;
 import org.broadleafcommerce.common.exception.ExceptionHelper;
 import org.broadleafcommerce.common.site.domain.Site;
@@ -82,7 +82,7 @@ public class SolrConfiguration implements InitializingBean {
 
     /**
      * Sets up Solr using multiple clients, one primary, one for reindexing, and one admin to reduce down time during
-     * indexing.  This constructor should be used when setting up HttpSolrClient since no collection names are
+     * indexing.  This constructor should be used when setting up HttpJettySolrClient since no collection names are
      * being provided.
      * <p>
      * The adminServer is just a reference to a SolrClient component for connecting to Solr.  In newer
@@ -102,16 +102,16 @@ public class SolrConfiguration implements InitializingBean {
     public SolrConfiguration(SolrClient solrServer, SolrClient reindexServer, SolrClient adminServer) throws IllegalStateException {
         //get primary and reindex names from http urls
 
-        if (HttpSolrClient.class.isAssignableFrom(solrServer.getClass())) {
-            this.setPrimaryName(determineCoreName((HttpSolrClient) solrServer));
-        } else if (DelegatingHttpSolrClient.class.isAssignableFrom(solrServer.getClass())) {
-            this.setPrimaryName(((DelegatingHttpSolrClient) solrServer).getDefaultCollection());
+        if (HttpJettySolrClient.class.isAssignableFrom(solrServer.getClass())) {
+            this.setPrimaryName(determineCoreName((HttpJettySolrClient) solrServer));
+        } else if (DelegatingHttpJettySolrClient.class.isAssignableFrom(solrServer.getClass())) {
+            this.setPrimaryName(((DelegatingHttpJettySolrClient) solrServer).getDefaultCollection());
         }
 
-        if (HttpSolrClient.class.isAssignableFrom(reindexServer.getClass())) {
-            this.setReindexName(determineCoreName((HttpSolrClient) reindexServer));
-        } else if (DelegatingHttpSolrClient.class.isAssignableFrom(reindexServer.getClass())) {
-            this.setReindexName(((DelegatingHttpSolrClient) reindexServer).getDefaultCollection());
+        if (HttpJettySolrClient.class.isAssignableFrom(reindexServer.getClass())) {
+            this.setReindexName(determineCoreName((HttpJettySolrClient) reindexServer));
+        } else if (DelegatingHttpJettySolrClient.class.isAssignableFrom(reindexServer.getClass())) {
+            this.setReindexName(((DelegatingHttpJettySolrClient) reindexServer).getDefaultCollection());
         }
 
         this.setServer(solrServer);
@@ -121,7 +121,7 @@ public class SolrConfiguration implements InitializingBean {
 
     /**
      * Sets up Solr using multiple clients, one primary, one for reindexing, and one admin to reduce down time during
-     * indexing.  This constructor should be used when setting up HttpSolrClient since no collection names are
+     * indexing.  This constructor should be used when setting up HttpJettySolrClient since no collection names are
      * being provided.  Namespace can be specified if managing multiple document sets within the same cores.
      * <p>
      * The adminServer is just a reference to a SolrClient component for connecting to Solr.  In newer
@@ -146,23 +146,23 @@ public class SolrConfiguration implements InitializingBean {
             String namespace
     ) throws IllegalStateException {
         this.setNamespace(namespace);
-        if (HttpSolrClient.class.isAssignableFrom(solrServer.getClass())) {
-            this.setPrimaryName(determineCoreName((HttpSolrClient) solrServer));
-        } else if (DelegatingHttpSolrClient.class.isAssignableFrom(solrServer.getClass())) {
-            if (((DelegatingHttpSolrClient) solrServer).getDefaultCollection() == null) {
-                this.setReindexName(determineCoreName(((DelegatingHttpSolrClient) solrServer).getDelegate()));
+        if (HttpJettySolrClient.class.isAssignableFrom(solrServer.getClass())) {
+            this.setPrimaryName(determineCoreName((HttpJettySolrClient) solrServer));
+        } else if (DelegatingHttpJettySolrClient.class.isAssignableFrom(solrServer.getClass())) {
+            if (((DelegatingHttpJettySolrClient) solrServer).getDefaultCollection() == null) {
+                this.setReindexName(determineCoreName(((DelegatingHttpJettySolrClient) solrServer).getDelegate()));
             } else {
-                this.setReindexName(((DelegatingHttpSolrClient) solrServer).getDefaultCollection());
+                this.setReindexName(((DelegatingHttpJettySolrClient) solrServer).getDefaultCollection());
             }
         }
 
-        if (HttpSolrClient.class.isAssignableFrom(reindexServer.getClass())) {
-            this.setReindexName(determineCoreName((HttpSolrClient) reindexServer));
-        } else if (DelegatingHttpSolrClient.class.isAssignableFrom(solrServer.getClass())) {
-            if (((DelegatingHttpSolrClient) reindexServer).getDefaultCollection() == null) {
-                this.setReindexName(determineCoreName(((DelegatingHttpSolrClient) reindexServer).getDelegate()));
+        if (HttpJettySolrClient.class.isAssignableFrom(reindexServer.getClass())) {
+            this.setReindexName(determineCoreName((HttpJettySolrClient) reindexServer));
+        } else if (DelegatingHttpJettySolrClient.class.isAssignableFrom(solrServer.getClass())) {
+            if (((DelegatingHttpJettySolrClient) reindexServer).getDefaultCollection() == null) {
+                this.setReindexName(determineCoreName(((DelegatingHttpJettySolrClient) reindexServer).getDelegate()));
             } else {
-                this.setReindexName(((DelegatingHttpSolrClient) reindexServer).getDefaultCollection());
+                this.setReindexName(((DelegatingHttpJettySolrClient) reindexServer).getDefaultCollection());
             }
         }
 
@@ -173,7 +173,7 @@ public class SolrConfiguration implements InitializingBean {
 
     /**
      * Sets up Solr using multiple clients, one primary, one for reindexing, and one admin to reduce down time during
-     * indexing. This constructor should be used when setting up LBHttpSolrClients because primaryCoreName and
+     * indexing. This constructor should be used when setting up LBHttpJettySolrClients because primaryCoreName and
      * reindexCoreName need to be provided to SolrConfiguration.
      * <p>
      * The adminServer is just a reference to a SolrClient component for connecting to Solr.  In newer
@@ -208,7 +208,7 @@ public class SolrConfiguration implements InitializingBean {
 
     /**
      * Sets up Solr using multiple clients, one primary, one for reindexing, and one admin to reduce down time during
-     * indexing. This constructor should be used when setting up LBHttpSolrClients because primaryCoreName and
+     * indexing. This constructor should be used when setting up LBHttpJettySolrClients because primaryCoreName and
      * reindexCoreName need to be provided to SolrConfiguration. Namespace can be specified if managing multiple
      * document sets within the same cores.
      * <p>
@@ -431,8 +431,8 @@ public class SolrConfiguration implements InitializingBean {
     /**
      * Sets the primary SolrClient instance to communicate with Solr.  This is typically one of the following:
      * <code>org.apache.solr.client.solrj.embedded.EmbeddedSolrClient</code>,
-     * <code>org.apache.solr.client.solrj.impl.HttpSolrClient</code>,
-     * <code>org.apache.solr.client.solrj.impl.LBHttpSolrClient</code>,
+     * <code>org.apache.solr.client.solrj.impl.HttpJettySolrClient</code>,
+     * <code>org.apache.solr.client.solrj.impl.LBHttpJettySolrClient</code>,
      * or <code>org.apache.solr.client.solrj.impl.CloudSolrClient</code>
      *
      * @param server SolrClient
@@ -792,7 +792,7 @@ public class SolrConfiguration implements InitializingBean {
         return null;
     }
 
-    protected String determineCoreName(HttpSolrClient httpSolrClient) {
+    protected String determineCoreName(HttpJettySolrClient httpSolrClient) {
         String url = httpSolrClient.getBaseURL();
         return url.substring(url.lastIndexOf('/') + 1);
     }

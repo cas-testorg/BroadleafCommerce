@@ -24,7 +24,7 @@ import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.StreamingResponseCallback;
 import org.apache.solr.client.solrj.beans.DocumentObjectBinder;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.solrj.jetty.HttpJettySolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
@@ -42,35 +42,35 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Wrapper implementation of Solr that delegates to an {@link HttpSolrClient}.  With older versions of SolrJ, there was no ability to specify a
- * a collection on an {@link HttpSolrClient}.  As a result, you needed two different clients, one for each collection.  For example, you might have
+ * Wrapper implementation of Solr that delegates to an {@link HttpJettySolrClient}.  With older versions of SolrJ, there was no ability to specify a
+ * a collection on an {@link HttpJettySolrClient}.  As a result, you needed two different clients, one for each collection.  For example, you might have
  * a client with the base URL: http://localhost:8983/solr/catalogs and another with the base URL of http://localhost:8983/solr/catalogs_reindex.
  * <p/>
  * What this class allows for is a "defaultCollection".  If the base URL is http://localhost:8983/solr for example, and the default collection is "catalog", then a call
- * to {@link DelegatingHttpSolrClient#query(new SolrQuery("foo:bar")} will search the "catalog" index, or http://localhost:8983/solr/catalogs.  Alternatively, a call to
- * {@link DelegatingHttpSolrClient#query("catalogs_reindex", new SolrQuery("foo:bar"))} will search the "catalogs_reindex" index, or http://localhost:8983/solr/catalogs_reindex.
+ * to {@link DelegatingHttpJettySolrClient#query(new SolrQuery("foo:bar")} will search the "catalog" index, or http://localhost:8983/solr/catalogs.  Alternatively, a call to
+ * {@link DelegatingHttpJettySolrClient#query("catalogs_reindex", new SolrQuery("foo:bar"))} will search the "catalogs_reindex" index, or http://localhost:8983/solr/catalogs_reindex.
  * <p>
  * The same thing goes for writes.  This class simply delegates to the delegate passed into the constructor.
  *
  * @author Kelly Tisdell
  */
-public class DelegatingHttpSolrClient extends SolrClient {
+public class DelegatingHttpJettySolrClient extends SolrClient {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    protected final HttpSolrClient delegate;
+    protected final HttpJettySolrClient delegate;
     protected final String defaultCollection;
     protected final String defaultCollectionPath;
 
-    public DelegatingHttpSolrClient(HttpSolrClient delegate) {
+    public DelegatingHttpJettySolrClient(HttpJettySolrClient delegate) {
         Assert.notNull(delegate, "SolrClient cannot be null.");
         this.delegate = delegate;
         this.defaultCollection = null;
         defaultCollectionPath = null;
     }
 
-    public DelegatingHttpSolrClient(HttpSolrClient delegate, String defaultCollection) {
+    public DelegatingHttpJettySolrClient(HttpJettySolrClient delegate, String defaultCollection) {
         Assert.notNull(delegate, "SolrClient cannot be null.");
         this.delegate = delegate;
         if (StringUtils.isNotBlank(defaultCollection)) {
@@ -653,7 +653,7 @@ public class DelegatingHttpSolrClient extends SolrClient {
         delegate.close();
     }
 
-    public HttpSolrClient getDelegate() {
+    public HttpJettySolrClient getDelegate() {
         return delegate;
     }
 
