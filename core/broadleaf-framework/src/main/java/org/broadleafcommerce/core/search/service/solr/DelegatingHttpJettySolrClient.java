@@ -22,9 +22,9 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.StreamingResponseCallback;
 import org.apache.solr.client.solrj.beans.DocumentObjectBinder;
-import org.apache.solr.solrj.jetty.HttpJettySolrClient;
+import org.apache.solr.client.solrj.response.StreamingResponseCallback;
+import org.apache.solr.client.solrj.jetty.HttpJettySolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
@@ -643,9 +643,8 @@ public class DelegatingHttpJettySolrClient extends SolrClient {
         }
     }
 
-    @Override
     public DocumentObjectBinder getBinder() {
-        return delegate.getBinder();
+        return DocumentObjectBinder.INSTANCE;
     }
 
     @Override

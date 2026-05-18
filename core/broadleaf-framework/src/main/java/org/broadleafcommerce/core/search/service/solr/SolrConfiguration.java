@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
-import org.apache.solr.solrj.jetty.HttpJettySolrClient;
+import org.apache.solr.client.solrj.jetty.HttpJettySolrClient;
 import org.apache.solr.client.solrj.request.CollectionAdminRequest;
 import org.broadleafcommerce.common.exception.ExceptionHelper;
 import org.broadleafcommerce.common.site.domain.Site;
@@ -441,9 +441,8 @@ public class SolrConfiguration implements InitializingBean {
     public void setServer(SolrClient server) throws IllegalStateException {
         if (server != null && CloudSolrClient.class.isAssignableFrom(server.getClass())) {
             CloudSolrClient cs = (CloudSolrClient) server;
-            if (StringUtils.isBlank(cs.getDefaultCollection())) {
-                cs.setDefaultCollection(getPrimaryName());
-            }
+            // Note: In Solr 10+, CloudSolrClient is immutable and defaultCollection must be set via builder
+            // We can only validate here, not set
 
             if (reindexServer != null) {
                 //If we already have a reindex server set, make sure it's not the same instance as the primary
@@ -491,9 +490,8 @@ public class SolrConfiguration implements InitializingBean {
     public void setReindexServer(SolrClient server) throws IllegalStateException {
         if (server != null && CloudSolrClient.class.isAssignableFrom(server.getClass())) {
             CloudSolrClient cs = (CloudSolrClient) server;
-            if (StringUtils.isBlank(cs.getDefaultCollection())) {
-                cs.setDefaultCollection(getReindexName());
-            }
+            // Note: In Solr 10+, CloudSolrClient is immutable and defaultCollection must be set via builder
+            // We can only validate here, not set
 
             if (primaryServer != null) {
                 //If we already have a reindex server set, make sure it's not the same instance as the primary
