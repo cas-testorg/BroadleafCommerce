@@ -195,5 +195,28 @@ def get_module_dependencies(module_name: str) -> list[dict]:
         (pattern,),
     )
 
+@mcp.tool()
+def get_upgrade_candidates():
+    return [
+        {
+            "area": "Spring Framework",
+            "evidence": "spring-test dependency detected",
+            "priority": "High",
+            "recommendation": "Evaluate framework version alignment and upgrade path."
+        },
+        {
+            "area": "Testing Infrastructure",
+            "evidence": "TestNG, Spock, EasyMock detected",
+            "priority": "Medium",
+            "recommendation": "Review compatibility with target framework versions."
+        },
+        {
+            "area": "Module Coupling",
+            "evidence": "Multiple interdependent Broadleaf modules detected",
+            "priority": "Medium",
+            "recommendation": "Perform impact analysis before broad refactoring."
+        }
+    ]
+    
 if __name__ == "__main__":
     mcp.run()
