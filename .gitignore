@@ -13,3 +13,6 @@ bin/
 **/*externalToolBuilders
 .sts4-cache
 **/*rebel.xml
+.venv/
+__pycache__/
+*.pyc
