@@ -129,5 +129,71 @@ def analyze_module(module_name: str) -> dict:
             "Review dependency relationships before performing modernization activities."
     }
 
+@mcp.tool()
+def get_modernization_candidates():
+    """
+    Return areas that are good candidates for modernization.
+    """
+
+    return [
+        {
+            "area": "Broadleaf Framework",
+            "reason": "Core framework dependency",
+            "priority": "High"
+        },
+        {
+            "area": "Admin Modules",
+            "reason": "Potential coupling with core services",
+            "priority": "Medium"
+        },
+        {
+            "area": "Integration",
+            "reason": "Likely external dependency touchpoints",
+            "priority": "Medium"
+        }
+    ]
+
+@mcp.tool()
+def get_maven_modules() -> list[dict]:
+    """Return Maven modules discovered in the Broadleaf repository."""
+    return query_db(
+        """
+        SELECT artifact_id, packaging, pom_path, group_id, version
+        FROM maven_modules
+        ORDER BY pom_path
+        """
+    )
+
+@mcp.tool()
+def search_maven_dependencies(keyword: str) -> list[dict]:
+    """Search Maven dependencies by group, artifact, module, or version."""
+    pattern = f"%{keyword}%"
+    return query_db(
+        """
+        SELECT module, group_id, artifact_id, version, scope, pom_path
+        FROM maven_dependencies
+        WHERE module LIKE ?
+           OR group_id LIKE ?
+           OR artifact_id LIKE ?
+           OR version LIKE ?
+        ORDER BY module, group_id, artifact_id
+        """,
+        (pattern, pattern, pattern, pattern),
+    )
+
+@mcp.tool()
+def get_module_dependencies(module_name: str) -> list[dict]:
+    """Return Maven dependencies for a specific module."""
+    pattern = f"%{module_name}%"
+    return query_db(
+        """
+        SELECT module, group_id, artifact_id, version, scope, pom_path
+        FROM maven_dependencies
+        WHERE module LIKE ?
+        ORDER BY group_id, artifact_id
+        """,
+        (pattern,),
+    )
+
 if __name__ == "__main__":
     mcp.run()
