@@ -47,17 +47,28 @@ CREATE TABLE code_artifacts (
 
 seed_data = {
     "components": [
-        ("Broadleaf Commerce", "application", ".", "Legacy Java commerce application with modular ecommerce capabilities."),
-        ("Admin", "module", "admin", "Administrative UI and management functionality."),
-        ("Core", "module", "core", "Core commerce domain logic and shared services."),
-        ("API", "module", "api", "Public API and integration-facing code."),
-        ("Web", "module", "site/web", "Customer-facing storefront web layer."),
+        ("Broadleaf Commerce", "application", ".", "Large Java-based ecommerce platform with admin, core, common, and integration modules."),
+        ("Admin", "module group", "admin", "Administrative and content management functionality."),
+        ("Broadleaf Admin Module", "module", "admin/broadleaf-admin-module", "Core admin module."),
+        ("Broadleaf Content Management Module", "module", "admin/broadleaf-contentmanagement-module", "Content management functionality."),
+        ("Broadleaf Open Admin Platform", "module", "admin/broadleaf-open-admin-platform", "Admin platform foundation."),
+        ("Common", "module", "common/src", "Shared/common code used across the platform."),
+        ("Core", "module group", "core", "Core commerce framework and profile functionality."),
+        ("Broadleaf Framework", "module", "core/broadleaf-framework", "Core commerce framework."),
+        ("Broadleaf Framework Web", "module", "core/broadleaf-framework-web", "Web-facing framework functionality."),
+        ("Broadleaf Profile", "module", "core/broadleaf-profile", "Customer/profile domain functionality."),
+        ("Broadleaf Profile Web", "module", "core/broadleaf-profile-web", "Web-facing profile functionality."),
+        ("Integration", "module", "integration/src", "Integration-related functionality."),
     ],
     "dependencies": [
-        ("Web", "Core", "module dependency", "Storefront depends on core commerce services and domain logic."),
-        ("Admin", "Core", "module dependency", "Admin functionality depends on core domain and service layers."),
-        ("API", "Core", "module dependency", "API layer exposes core commerce capabilities."),
-        ("Core", "Database", "persistence dependency", "Core services interact with relational persistence layer."),
+        ("Admin", "Core", "module dependency", "Administrative functionality likely depends on core commerce services and domain model."),
+        ("Broadleaf Admin Module", "Broadleaf Open Admin Platform", "module dependency", "Admin module likely builds on the open admin platform."),
+        ("Broadleaf Content Management Module", "Broadleaf Open Admin Platform", "module dependency", "Content management likely uses shared admin platform functionality."),
+        ("Broadleaf Framework Web", "Broadleaf Framework", "module dependency", "Web framework functionality depends on the core framework."),
+        ("Broadleaf Profile Web", "Broadleaf Profile", "module dependency", "Profile web functionality depends on profile domain functionality."),
+        ("Core", "Common", "shared dependency", "Core modules likely depend on shared common utilities."),
+        ("Admin", "Common", "shared dependency", "Admin modules likely depend on shared common utilities."),
+        ("Integration", "Core", "integration dependency", "Integration code likely interacts with core commerce functionality."),
     ],
     "modernization_findings": [
         (
@@ -86,10 +97,16 @@ seed_data = {
         ),
     ],
     "code_artifacts": [
-        ("module", "Admin", "admin", None, "Likely admin-facing functionality."),
-        ("module", "Core", "core", None, "Likely core domain and service functionality."),
-        ("module", "API", "api", None, "Likely external-facing API functionality."),
-        ("module", "Web", "site/web", None, "Likely storefront web functionality."),
+        ("module", "broadleaf-admin-functional-tests", "admin/broadleaf-admin-functional-tests", None, "Functional tests for admin behavior."),
+        ("module", "broadleaf-admin-module", "admin/broadleaf-admin-module", None, "Core admin module."),
+        ("module", "broadleaf-contentmanagement-module", "admin/broadleaf-contentmanagement-module", None, "Content management module."),
+        ("module", "broadleaf-open-admin-platform", "admin/broadleaf-open-admin-platform", None, "Open admin platform module."),
+        ("module", "common", "common/src", None, "Shared source code."),
+        ("module", "broadleaf-framework", "core/broadleaf-framework", None, "Core framework module."),
+        ("module", "broadleaf-framework-web", "core/broadleaf-framework-web", None, "Web framework module."),
+        ("module", "broadleaf-profile", "core/broadleaf-profile", None, "Profile domain module."),
+        ("module", "broadleaf-profile-web", "core/broadleaf-profile-web", None, "Profile web module."),
+        ("module", "integration", "integration/src", None, "Integration source code."),
     ],
 }
 
