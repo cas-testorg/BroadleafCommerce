@@ -1,6 +1,8 @@
 from pathlib import Path
 import sqlite3
 from mcp.server.fastmcp import FastMCP
+import os
+import requests
 
 mcp = FastMCP("broadleaf-modernization-context")
 
@@ -217,6 +219,51 @@ def get_upgrade_candidates():
             "recommendation": "Perform impact analysis before broad refactoring."
         }
     ]
+
+@mcp.tool()
+def create_github_modernization_issue(title: str, body: str, labels: list[str] = None) -> dict:
+    """Create a GitHub issue for a modernization recommendation."""
+
+    token = os.getenv("GITHUB_TOKEN")
+    repo = os.getenv("GITHUB_REPO")
+
+    if not token or not repo:
+        return {
+            "error": "GITHUB_TOKEN and GITHUB_REPO environment variables are required."
+        }
+
+    url = f"https://api.github.com/repos/{repo}/issues"
+
+    payload = {
+        "title": title,
+        "body": body,
+        "labels": labels or ["modernization", "ai-recommendation"]
+    }
+
+    response = requests.post(
+        url,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json"
+        },
+        json=payload,
+        timeout=15
+    )
+
+    if response.status_code >= 400:
+        return {
+            "error": response.text,
+            "status_code": response.status_code"
+        }
+
+    issue = response.json()
+
+    return {
+        "number": issue.get("number"),
+        "title": issue.get("title"),
+        "url": issue.get("html_url"),
+        "state": issue.get("state")
+    }
     
 if __name__ == "__main__":
     mcp.run()
