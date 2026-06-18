@@ -253,7 +253,7 @@ def create_github_modernization_issue(title: str, body: str, labels: list[str] =
     if response.status_code >= 400:
         return {
             "error": response.text,
-            "status_code": response.status_code"
+            "status_code": response.status_code
         }
 
     issue = response.json()
