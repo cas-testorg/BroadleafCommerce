@@ -132,6 +132,24 @@ python scripts/inspect_poms.py       # scan pom.xml and populate Maven tables
 python mcp_server.py                 # expose context via MCP
 ```
 
+## Requirements
+
+- **SQLite** — required for `data/app_context.db`. Python's built-in `sqlite3` module is used by the scripts and MCP server; a system `sqlite3` CLI is optional but useful for inspection.
+- **Python 3** — see `requirements.txt` for package dependencies.
+
+## Tested environment
+
+This demo was built and tested on:
+
+| Component | Version |
+|-----------|---------|
+| OS | Ubuntu 24.04.4 LTS |
+| Cursor | 3.8.23 |
+| SQLite | 3.45.1 |
+| Python | 3.12.3 |
+
+Other platforms may work but were not validated for this demo.
+
 ## Setup
 
 ```bash
