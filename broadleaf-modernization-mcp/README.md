@@ -9,18 +9,22 @@ This project demonstrates how MCP can provide application-specific context to AI
 - MCP server exposing modernization tools
 - Broadleaf Commerce modernization use case
 
+## Design Philosophy
+
+This project intentionally separates discovered application metadata from curated architectural knowledge. Automated discovery provides repeatable structural information (modules, Maven dependencies, packaging), while curated context captures architectural understanding and modernization guidance that cannot easily be inferred from source code alone. Together, these data sources provide richer context for AI agents through MCP.
+
 ## Data Flow: Discovery to MCP Integration
 
 ### 1. Repository discovery
 
-Broadleaf source is cloned locally. Scripts inspect repo structure, Maven modules, and dependencies. Hand-curated architecture and modernization notes supplement automated discovery.
+Broadleaf source is cloned locally. Scripts inspect the repository structure, discover Maven modules, and extract dependency metadata from each `pom.xml`. Hand-curated architecture and modernization notes supplement the automated discovery process.
 
 ### 2. Context extraction
 
 | Script | Role |
 |--------|------|
 | `scripts/inspect_poms.py` | Parses every `pom.xml` in the repo (excluding this MCP project). Extracts modules, artifact IDs, packaging, and dependency group/artifact/version/scope. |
-| `scripts/build_context_db.py` | Seeds known components, module dependencies, modernization findings, and code artifacts into the database. |
+| `scripts/build_context_db.py` | Populates curated components, logical dependencies, modernization findings, and code artifact metadata into the database. |
 
 ### 3. Context persistence
 
@@ -31,7 +35,7 @@ Extracted and curated data is stored in local SQLite: `data/app_context.db`.
 | `components` | `build_context_db.py` | Application modules and module groups |
 | `dependencies` | `build_context_db.py` | Logical module relationships |
 | `modernization_findings` | `build_context_db.py` | Risks and recommendations |
-| `code_artifacts` | `build_context_db.py` | Module inventory |
+| `code_artifacts` | `build_context_db.py` | Curated code artifact metadata |
 | `maven_modules` | `inspect_poms.py` | Parsed Maven module metadata |
 | `maven_dependencies` | `inspect_poms.py` | Parsed Maven dependency graph |
 
@@ -63,7 +67,7 @@ Markdown files in `context/` provide higher-level narrative context:
 
 ### 5. Agent workflow
 
-Cursor or Claude calls MCP tools during analysis. The agent uses application-specific context instead of relying only on source code, synthesizes findings into modernization recommendations, and can convert the final recommendation into a GitHub issue.
+An AI coding agent (Cursor using Claude) invokes MCP tools during analysis. The agent uses application-specific context instead of relying only on source code, synthesizes findings into modernization recommendations, and can convert the final recommendation into a GitHub issue.
 
 ### 6. Actionable outcome
 
@@ -95,7 +99,8 @@ flowchart TB
     end
 
     subgraph agent["5. Agent workflow"]
-        CURSOR["Cursor / Claude agent"]
+        CURSOR["Cursor"]
+        LLM["Claude (LLM)"]
         SYNTH["Synthesize modernization<br/>recommendations"]
     end
 
@@ -117,7 +122,8 @@ flowchart TB
     SERVER --> TOOLS
 
     TOOLS <-->|"MCP protocol"| CURSOR
-    CURSOR --> SYNTH
+    CURSOR --> LLM
+    LLM --> SYNTH
     SYNTH -->|"create_github_modernization_issue"| TOOLS
     TOOLS -->|"GITHUB_TOKEN + GITHUB_REPO"| GH
 ```
@@ -127,15 +133,18 @@ flowchart TB
 Run the extraction scripts before starting the MCP server:
 
 ```bash
-python scripts/build_context_db.py   # seed curated context (resets core tables)
+python scripts/build_context_db.py   # populate curated context (resets core tables)
 python scripts/inspect_poms.py       # scan pom.xml and populate Maven tables
 python mcp_server.py                 # expose context via MCP
 ```
+
+Re-run `inspect_poms.py` whenever the repository changes (optional, but recommended to keep Maven metadata current).
 
 ## Requirements
 
 - **SQLite** — required for `data/app_context.db`. Python's built-in `sqlite3` module is used by the scripts and MCP server; a system `sqlite3` CLI is optional but useful for inspection.
 - **Python 3** — see `requirements.txt` for package dependencies.
+- **requests** — used for GitHub issue creation.
 
 ## Tested environment
 
