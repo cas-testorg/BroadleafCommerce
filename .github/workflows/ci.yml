@@ -117,8 +117,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-      - name: Create issue on build failure
-        if: steps.build.outcome == 'failure'
+      - name: Create or update issue on build failure
+        if: steps.build.outcome == 'failure' && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
@@ -131,16 +131,42 @@ jobs:
 
             const trimmedLog = log.slice(-12000);
 
-            const title = `CI failure: ${context.workflow} #${context.runNumber}`;
+            const pr = context.payload.pull_request;
+            const prNumber = pr.number;
+            const prTitle = pr.title;
+            const branch = pr.head.ref;
+            const actor = pr.user?.login || 'unknown';
+
+            const isRenovate =
+              branch.startsWith('renovate/') ||
+              actor === 'renovate[bot]';
+
+            const issueTitle = isRenovate
+              ? `CI failure: ${prTitle}`
+              : `CI failure: PR #${prNumber} - ${prTitle}`;
+
+            const dedupeLabel = `ci-failure-pr-${prNumber}`;
+
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: dedupeLabel
+            });
+
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 
             const body = `
-            Build failed in workflow: ${context.workflow}
+            Build failed for PR #${prNumber}: ${prTitle}
+
+            PR:
+            ${pr.html_url}
 
             Run:
-            ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+            ${runUrl}
 
-            Ref:
-            ${context.ref}
+            Branch:
+            ${branch}
 
             SHA:
             ${context.sha}
@@ -149,7 +175,7 @@ jobs:
             ${process.env.JAVA_HOME || 'Unknown'}
 
             Suggested CoreStory workflow:
-            Use the Agentic Bug Resolution playbook against this issue. Treat the build failure as the bug report. First identify affected modules, likely dependency or code paths, then reproduce with the smallest test/build command before changing code.
+            Use the Agentic Bug Resolution playbook against this issue. Treat the CI failure as the bug report and the PR as the proposed dependency/code change. First identify affected modules, likely dependency or code paths, then reproduce with the smallest test/build command before changing code.
 
             Failure log excerpt:
 
@@ -158,15 +184,41 @@ jobs:
             \`\`\`
             `;
 
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title,
-              body,
-              labels: ['ci-failure', 'corestory-investigation']
-            });
+            if (existingIssues.data.length > 0) {
+              const issue = existingIssues.data[0];
 
-            core.setFailed('Build failed');
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `CI failed again for PR #${prNumber}.
+
+            Run:
+            ${runUrl}
+
+            Latest failure excerpt:
+
+            \`\`\`
+            ${trimmedLog}
+            \`\`\``
+              });
+
+              core.setFailed(`Build failed. Updated existing issue #${issue.number}.`);
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                body,
+                labels: [
+                  'ci-failure',
+                  'corestory-investigation',
+                  dedupeLabel
+                ]
+              });
+
+              core.setFailed('Build failed. Created CI failure issue.');
+            }
 
       - name: CI summary
         if: always()
