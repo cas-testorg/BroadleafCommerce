@@ -1,0 +1,52 @@
+Renovate PR
+    │
+    ▼
+GitHub Actions CI
+    │
+    ├── Pass ──► Merge / continue normal review
+    │
+    │
+    ▼
+Build/Test Fails
+    │
+    ▼
+GitHub Issue
+(dynamic title + build log + PR link)
+    │
+    ▼
+CoreStory Agentic Bug Resolution
+    │
+    ▼
+Dependency impact analysis
+    │
+    ▼
+Minimal remediation
+    │
+    ▼
+Local focused build/test
+    │
+    ├── Fail ──► Return to impact analysis / adjust fix
+    │
+    ▼
+Local broader validation
+    │
+    ├── Fail ──► Return to impact analysis / adjust fix
+    │
+    ▼
+Commit fix to PR
+    │
+    ▼
+GitHub Actions CI
+    │
+    ├── Fail ──► Update existing issue with latest failure
+    │
+    │              │
+    │
+    │              ▼
+    │        CoreStory continues investigation
+    │
+    ▼
+Pass
+    │
+    ▼
+Merge / document remediation
