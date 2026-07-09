@@ -47,7 +47,7 @@
         <spring.security.version>6.5.5</spring.security.version>
         <spring-ldap-core.version>3.3.3</spring-ldap-core.version>
         <spring.boot.version>3.5.6</spring.boot.version>
-        <jackson.version>2.20.0</jackson.version>
+        <jackson.version>2.22.1</jackson.version>
         <lombok.version>1.18.42</lombok.version>
         <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
         <geb.version>7.0</geb.version>
