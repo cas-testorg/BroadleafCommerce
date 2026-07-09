@@ -16,18 +16,106 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Resolve Java (.java-version or Maven compiler level)
+        id: java
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          normalize_java() {
+            local v="$1"
+            v="${v%%-*}"
+            v="${v%%+*}"
+            if [[ "$v" =~ ^1\.([0-9]+)$ ]]; then
+              echo "${BASH_REMATCH[1]}"
+            elif [[ "$v" =~ ^([0-9]+)(\.[0-9]+)*$ ]]; then
+              echo "${BASH_REMATCH[1]}"
+            else
+              echo ""
+            fi
+          }
+
+          for candidate in .java-version src/.java-version; do
+            if [ -f "$candidate" ]; then
+              raw=$(tr -d '\r\n\t ' < "$candidate" | head -c 64)
+              jv=$(normalize_java "$raw")
+              if [ -n "$jv" ]; then
+                echo "Using Java from ${candidate}: ${jv}"
+                echo "setup_mode=file" >> "$GITHUB_OUTPUT"
+                echo "java_version=${jv}" >> "$GITHUB_OUTPUT"
+                echo "java_version_file=${candidate}" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            fi
+          done
+
+          echo "No .java-version; deriving Java level from Maven POM compiler settings"
+
+          max=0
+          while IFS= read -r line; do
+            [ -z "${line:-}" ] && continue
+            n=$(normalize_java "$line")
+            [ -z "${n:-}" ] && continue
+            if [ "$n" -gt "$max" ]; then max=$n; fi
+          done < <(
+            {
+              grep -RhoP '<release>\K[0-9]+' --include='pom.xml' . 2>/dev/null || true
+              grep -RhoP '<maven\.compiler\.release>\K[0-9]+' --include='pom.xml' . 2>/dev/null || true
+              grep -RhoP '<java\.version>\K[^<]+' --include='pom.xml' . 2>/dev/null || true
+              grep -RhoP '<(source|target)>\K[0-9.]+' --include='pom.xml' . 2>/dev/null || true
+            }
+          )
+
+          if [ "$max" -eq 0 ]; then
+            echo "Could not determine Java version. Add .java-version or Maven compiler settings in a pom.xml."
+            exit 1
+          fi
+
+          echo "Highest Java level from POMs: ${max}"
+          echo "setup_mode=pom" >> "$GITHUB_OUTPUT"
+          echo "java_version=${max}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ steps.java.outputs.java_version }}
+
+      - name: Resolve Maven command
+        id: maven
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -x "./mvnw" ]]; then
+            echo "Using Maven wrapper"
+            echo "cmd=./mvnw" >> "$GITHUB_OUTPUT"
+          elif [[ -f "./mvnw" ]]; then
+            echo "Maven wrapper exists but is not executable; fixing permissions"
+            chmod +x ./mvnw
+            echo "cmd=./mvnw" >> "$GITHUB_OUTPUT"
+          else
+            echo "No Maven wrapper found; using system mvn"
+            echo "cmd=mvn" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build with Maven
         id: build
         continue-on-error: true
+        shell: bash
         run: |
-          ./mvnw clean test 2>&1 | tee build.log
+          set -euo pipefail
+          mkdir -p logs
+          ${{ steps.maven.outputs.cmd }} -B -ntp clean test 2>&1 | tee logs/build.log
 
       - name: Upload build log
         if: steps.build.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: build-log
-          path: build.log
+          path: logs/build.log
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Create issue on build failure
         if: steps.build.outcome == 'failure'
@@ -36,7 +124,11 @@ jobs:
           script: |
             const fs = require('fs');
 
-            const log = fs.readFileSync('build.log', 'utf8');
+            const logPath = 'logs/build.log';
+            const log = fs.existsSync(logPath)
+              ? fs.readFileSync(logPath, 'utf8')
+              : 'No build log was produced.';
+
             const trimmedLog = log.slice(-12000);
 
             const title = `CI failure: ${context.workflow} #${context.runNumber}`;
@@ -52,6 +144,9 @@ jobs:
 
             SHA:
             ${context.sha}
+
+            Java:
+            ${process.env.JAVA_HOME || 'Unknown'}
 
             Suggested CoreStory workflow:
             Use the Agentic Bug Resolution playbook against this issue. Treat the build failure as the bug report. First identify affected modules, likely dependency or code paths, then reproduce with the smallest test/build command before changing code.
@@ -72,3 +167,22 @@ jobs:
             });
 
             core.setFailed('Build failed');
+
+      - name: CI summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## CI"
+            echo ""
+            echo "| Item | Value |"
+            echo "| --- | --- |"
+            echo "| Repository | \`${{ github.repository }}\` |"
+            echo "| Workflow | \`${{ github.workflow }}\` |"
+            echo "| Run | \`${{ github.run_id }}\` |"
+            echo "| Ref | \`${{ github.ref }}\` |"
+            echo "| SHA | \`${{ github.sha }}\` |"
+            echo "| JDK resolved | \`${{ steps.java.outputs.java_version }}\` / \`${{ steps.java.outputs.setup_mode }}\` |"
+            echo "| Maven command | \`${{ steps.maven.outputs.cmd }}\` |"
+            echo "| Build outcome | \`${{ steps.build.outcome }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
