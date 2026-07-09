@@ -119,6 +119,11 @@
             <groupId>org.mvel</groupId>
             <artifactId>mvel2</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>does-not-exist</artifactId>
+            <version>0.0.1</version>
+        </dependency>
 
         <!-- JAXB Libraries -->
         <dependency>
