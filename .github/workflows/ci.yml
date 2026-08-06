@@ -358,7 +358,7 @@ jobs:
               '',
               `**Workflow run:** ${runUrl}`,
               `**Run ID:** \`${context.runId}\``,
-              `**Run attempt:** \`${context.runAttempt}\``,
+              `**Run attempt:** \`${runAttempt}\``,
               `**Runner:** \`${process.env.RUNNER_OS || 'Linux'}\``,
               `**Java:** \`Temurin ${javaVersion}\``,
               `**Java resolution mode:** \`${javaMode}\``,
