@@ -3,11 +3,12 @@ name: CI
 on:
   pull_request:
   push:
-   branches: 
-     - Integration
+    branches:
+      - Integration
 
 permissions:
   contents: read
+  pull-requests: read
   issues: write
   actions: read
 
@@ -16,7 +17,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
 
       - name: Resolve Java (.java-version or Maven compiler level)
         id: java
@@ -28,6 +30,7 @@ jobs:
             local v="$1"
             v="${v%%-*}"
             v="${v%%+*}"
+
             if [[ "$v" =~ ^1\.([0-9]+)$ ]]; then
               echo "${BASH_REMATCH[1]}"
             elif [[ "$v" =~ ^([0-9]+)(\.[0-9]+)*$ ]]; then
@@ -41,6 +44,7 @@ jobs:
             if [ -f "$candidate" ]; then
               raw=$(tr -d '\r\n\t ' < "$candidate" | head -c 64)
               jv=$(normalize_java "$raw")
+
               if [ -n "$jv" ]; then
                 echo "Using Java from ${candidate}: ${jv}"
                 echo "setup_mode=file" >> "$GITHUB_OUTPUT"
@@ -54,22 +58,35 @@ jobs:
           echo "No .java-version; deriving Java level from Maven POM compiler settings"
 
           max=0
+
           while IFS= read -r line; do
             [ -z "${line:-}" ] && continue
+
             n=$(normalize_java "$line")
             [ -z "${n:-}" ] && continue
-            if [ "$n" -gt "$max" ]; then max=$n; fi
+
+            if [ "$n" -gt "$max" ]; then
+              max=$n
+            fi
           done < <(
             {
-              grep -RhoP '<release>\K[0-9]+' --include='pom.xml' . 2>/dev/null || true
-              grep -RhoP '<maven\.compiler\.release>\K[0-9]+' --include='pom.xml' . 2>/dev/null || true
-              grep -RhoP '<java\.version>\K[^<]+' --include='pom.xml' . 2>/dev/null || true
-              grep -RhoP '<(source|target)>\K[0-9.]+' --include='pom.xml' . 2>/dev/null || true
+              grep -RhoP '<release>\K[0-9]+' \
+                --include='pom.xml' . 2>/dev/null || true
+
+              grep -RhoP '<maven\.compiler\.release>\K[0-9]+' \
+                --include='pom.xml' . 2>/dev/null || true
+
+              grep -RhoP '<java\.version>\K[^<]+' \
+                --include='pom.xml' . 2>/dev/null || true
+
+              grep -RhoP '<(source|target)>\K[0-9.]+' \
+                --include='pom.xml' . 2>/dev/null || true
             }
           )
 
           if [ "$max" -eq 0 ]; then
-            echo "Could not determine Java version. Add .java-version or Maven compiler settings in a pom.xml."
+            echo "Could not determine Java version."
+            echo "Add .java-version or Maven compiler settings in a pom.xml."
             exit 1
           fi
 
@@ -82,6 +99,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ steps.java.outputs.java_version }}
+          cache: maven
 
       - name: Resolve Maven command
         id: maven
@@ -90,54 +108,214 @@ jobs:
           set -euo pipefail
 
           if [[ -x "./mvnw" ]]; then
-            echo "Using Maven wrapper"
-            echo "cmd=./mvnw" >> "$GITHUB_OUTPUT"
+            executable="./mvnw"
+            echo "Using executable Maven wrapper"
           elif [[ -f "./mvnw" ]]; then
+            executable="./mvnw"
             echo "Maven wrapper exists but is not executable; fixing permissions"
             chmod +x ./mvnw
-            echo "cmd=./mvnw" >> "$GITHUB_OUTPUT"
           else
-            echo "No Maven wrapper found; using system mvn"
-            echo "cmd=mvn" >> "$GITHUB_OUTPUT"
+            executable="mvn"
+            echo "No Maven wrapper found; using system Maven"
           fi
+
+          arguments="-B -ntp clean test"
+          full_command="${executable} ${arguments}"
+
+          echo "executable=${executable}" >> "$GITHUB_OUTPUT"
+          echo "arguments=${arguments}" >> "$GITHUB_OUTPUT"
+          echo "full_command=${full_command}" >> "$GITHUB_OUTPUT"
+
+          echo "Resolved build command: ${full_command}"
 
       - name: Build with Maven
         id: build
         continue-on-error: true
         shell: bash
         run: |
-          set -euo pipefail
-          mkdir -p logs
-          ${{ steps.maven.outputs.cmd }} -B -ntp clean test 2>&1 | tee logs/build.log
+          set -o pipefail
 
-      - name: Upload build log
+          mkdir -p logs
+
+          echo "Command: ${{ steps.maven.outputs.full_command }}"
+          echo "Started: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+          ${{ steps.maven.outputs.full_command }} \
+            2>&1 | tee logs/build.log
+
+      - name: Create build metadata
+        if: always()
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REPOSITORY: ${{ github.repository }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          REF: ${{ github.ref }}
+          WORKFLOW_SHA: ${{ github.sha }}
+          JAVA_VERSION: ${{ steps.java.outputs.java_version }}
+          JAVA_MODE: ${{ steps.java.outputs.setup_mode }}
+          MAVEN_COMMAND: ${{ steps.maven.outputs.full_command }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p logs
+
+          {
+            echo "event_name=${EVENT_NAME}"
+            echo "repository=${REPOSITORY}"
+            echo "workflow=${WORKFLOW_NAME}"
+            echo "run_id=${RUN_ID}"
+            echo "run_attempt=${RUN_ATTEMPT}"
+            echo "ref=${REF}"
+            echo "workflow_sha=${WORKFLOW_SHA}"
+            echo "java_version=${JAVA_VERSION}"
+            echo "java_resolution_mode=${JAVA_MODE}"
+            echo "maven_command=${MAVEN_COMMAND}"
+            echo "build_outcome=${BUILD_OUTCOME}"
+          } > logs/build-metadata.txt
+
+      - name: Upload failure evidence
+        id: upload_failure_evidence
         if: steps.build.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
-          name: build-log
-          path: logs/build.log
-          if-no-files-found: ignore
-          retention-days: 14
+          name: ci-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            logs/build.log
+            logs/build-metadata.txt
+          if-no-files-found: warn
+          retention-days: 30
 
-      - name: Create or update issue on build failure
-        if: steps.build.outcome == 'failure' && github.event_name == 'pull_request'
+      - name: Create or update resolution-ready issue
+        if: >
+          steps.build.outcome == 'failure' &&
+          github.event_name == 'pull_request'
         uses: actions/github-script@v7
+        env:
+          MAVEN_COMMAND: ${{ steps.maven.outputs.full_command }}
+          JAVA_VERSION: ${{ steps.java.outputs.java_version }}
+          JAVA_MODE: ${{ steps.java.outputs.setup_mode }}
+          ARTIFACT_NAME: ci-failure-${{ github.run_id }}-${{ github.run_attempt }}
         with:
           script: |
             const fs = require('fs');
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pr = context.payload.pull_request;
+
+            const prNumber = pr.number;
+            const prTitle = pr.title;
+            const branch = pr.head.ref;
+            const headSha = pr.head.sha;
+            const baseBranch = pr.base.ref;
+            const actor = pr.user?.login || 'unknown';
+
+            const runUrl =
+              `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            const artifactName = process.env.ARTIFACT_NAME;
+            const mavenCommand = process.env.MAVEN_COMMAND || 'Unknown';
+            const javaVersion = process.env.JAVA_VERSION || 'Unknown';
+            const javaMode = process.env.JAVA_MODE || 'Unknown';
+
+            /*
+             * Retrieve all changed files. Using paginate avoids silently
+             * truncating PRs that contain more than one API page of files.
+             */
+            const changedFiles = await github.paginate(
+              github.rest.pulls.listFiles,
+              {
+                owner,
+                repo,
+                pull_number: prNumber,
+                per_page: 100
+              }
+            );
+
+            const fileSummary = changedFiles.length > 0
+              ? changedFiles
+                  .map(file => {
+                    const additions = file.additions ?? 0;
+                    const deletions = file.deletions ?? 0;
+                    return `- \`${file.filename}\` ` +
+                      `(${file.status}, +${additions}/-${deletions})`;
+                  })
+                  .join('\n')
+              : '- No changed files were returned by the GitHub API.';
+
+            /*
+             * Include POM and Maven-related patches when GitHub provides them.
+             * The API can omit "patch" for large or binary changes.
+             */
+            const relevantFiles = changedFiles.filter(file =>
+              file.filename === 'pom.xml' ||
+              file.filename.endsWith('/pom.xml') ||
+              file.filename.includes('.mvn/') ||
+              file.filename.includes('renovate')
+            );
+
+            const dependencyDiff = relevantFiles.length > 0
+              ? relevantFiles
+                  .map(file => {
+                    const patch = file.patch
+                      ? file.patch.slice(0, 6000)
+                      : 'Patch unavailable from the GitHub API. Review the PR diff.';
+
+                    return [
+                      `### \`${file.filename}\``,
+                      '',
+                      '```diff',
+                      patch,
+                      '```'
+                    ].join('\n');
+                  })
+                  .join('\n\n')
+              : [
+                  'No Maven or Renovate-related file patch was identified.',
+                  'Review the complete PR diff before making changes.'
+                ].join(' ');
 
             const logPath = 'logs/build.log';
             const log = fs.existsSync(logPath)
               ? fs.readFileSync(logPath, 'utf8')
               : 'No build log was produced.';
 
-            const trimmedLog = log.slice(-12000);
+            const lines = log.split(/\r?\n/);
 
-            const pr = context.payload.pull_request;
-            const prNumber = pr.number;
-            const prTitle = pr.title;
-            const branch = pr.head.ref;
-            const actor = pr.user?.login || 'unknown';
+            /*
+             * Create a concise failure excerpt. Start near the reactor summary
+             * or first Maven error, then include the remaining failure output.
+             */
+            let excerptStart = lines.findIndex(line =>
+              line.includes('Reactor Summary') ||
+              line.includes('[ERROR] Failed to execute goal') ||
+              line.includes('[ERROR] Failed to execute')
+            );
+
+            if (excerptStart < 0) {
+              excerptStart = Math.max(0, lines.length - 100);
+            } else {
+              excerptStart = Math.max(0, excerptStart - 15);
+            }
+
+            let failureExcerpt = lines
+              .slice(excerptStart)
+              .join('\n')
+              .trim();
+
+            /*
+             * Keep the GitHub issue comfortably below its maximum body size.
+             * The full log remains available as a workflow artifact.
+             */
+            if (failureExcerpt.length > 12000) {
+              failureExcerpt =
+                failureExcerpt.slice(0, 12000) +
+                '\n\n[Excerpt truncated. Download the full build artifact.]';
+            }
 
             const isRenovate =
               branch.startsWith('renovate/') ||
@@ -149,67 +327,162 @@ jobs:
 
             const dedupeLabel = `ci-failure-pr-${prNumber}`;
 
+            const artifactDownloadCommand =
+              `gh run download ${context.runId} ` +
+              `--repo ${owner}/${repo} ` +
+              `--name ${artifactName}`;
+
+            const body = [
+              '## CI failure summary',
+              '',
+              `The required Maven build failed for PR #${prNumber}.`,
+              '',
+              `**Pull request:** ${pr.html_url}`,
+              `**Title:** ${prTitle}`,
+              `**Author:** \`${actor}\``,
+              `**Head branch:** \`${branch}\``,
+              `**Base branch:** \`${baseBranch}\``,
+              `**PR head SHA:** \`${headSha}\``,
+              '',
+              '## Source change',
+              '',
+              '### Changed files',
+              '',
+              fileSummary,
+              '',
+              '### Relevant dependency or build-file diff',
+              '',
+              dependencyDiff,
+              '',
+              '## CI execution',
+              '',
+              `**Workflow run:** ${runUrl}`,
+              `**Run ID:** \`${context.runId}\``,
+              `**Run attempt:** \`${context.runAttempt}\``,
+              `**Runner:** \`${process.env.RUNNER_OS || 'Linux'}\``,
+              `**Java:** \`Temurin ${javaVersion}\``,
+              `**Java resolution mode:** \`${javaMode}\``,
+              '',
+              '**Original CI command:**',
+              '',
+              '```bash',
+              mavenCommand,
+              '```',
+              '',
+              '## Full failure evidence',
+              '',
+              `**Artifact:** \`${artifactName}\``,
+              '',
+              'Download with GitHub CLI:',
+              '',
+              '```bash',
+              artifactDownloadCommand,
+              '```',
+              '',
+              'The artifact contains:',
+              '',
+              '- `build.log` — complete Maven output',
+              '- `build-metadata.txt` — workflow and build metadata',
+              '',
+              '## Failure excerpt',
+              '',
+              '```text',
+              failureExcerpt,
+              '```',
+              '',
+              '## Expected outcome',
+              '',
+              'Determine whether the change proposed by this pull request is ' +
+                'valid and compatible with the existing application.',
+              '',
+              'A successful resolution must result in one of the following:',
+              '',
+              '1. A compatible, minimal change that passes the required build and tests.',
+              '2. A documented conclusion that the proposed change is invalid or incompatible, followed by the appropriate correction to the pull request or automation configuration.',
+              '',
+              'Do not introduce unrelated changes solely to obtain a passing build.',
+              '',
+              '## Suggested CoreStory workflow',
+              '',
+              'Use the **Agentic Bug Resolution** playbook.',
+              '',
+              `Treat this CI failure as the bug report and PR #${prNumber} as the proposed change.`,
+              '',
+              `1. Begin from PR head commit \`${headSha}\`.`,
+              '2. Review the complete PR diff and identify the intent of the proposed change.',
+              `3. Reproduce the failure using \`${mavenCommand}\`.`,
+              '4. Use CoreStory to identify:',
+              '   - affected modules and application capabilities;',
+              '   - relevant dependency declarations and dependency-management entries;',
+              '   - code paths that depend on the affected libraries or frameworks;',
+              '   - established implementation and testing patterns;',
+              '   - likely downstream impact.',
+              '5. Document the root-cause hypothesis before editing files.',
+              '6. Apply the smallest justified correction.',
+              '7. Run the smallest relevant validation first.',
+              `8. Run the complete required build: \`${mavenCommand}\`.`,
+              '9. Open or update a pull request containing:',
+              '   - root cause;',
+              '   - CoreStory context used;',
+              '   - files changed;',
+              '   - commands executed;',
+              '   - test and build results;',
+              '   - remaining risks or unresolved questions.',
+              '',
+              '## Constraints',
+              '',
+              '- Reproduce the failure before modifying files.',
+              '- Preserve the intent of the proposed change unless evidence shows that it is invalid or incompatible.',
+              '- Do not modify or downgrade unrelated dependencies without documenting why.',
+              '- Do not suppress build or dependency-resolution errors.',
+              '- Do not merge automatically.'
+            ].join('\n');
+
             const existingIssues = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner,
+              repo,
               state: 'open',
-              labels: dedupeLabel
+              labels: dedupeLabel,
+              per_page: 10
             });
-
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-
-            const body = `
-            Build failed for PR #${prNumber}: ${prTitle}
-
-            PR:
-            ${pr.html_url}
-
-            Run:
-            ${runUrl}
-
-            Branch:
-            ${branch}
-
-            SHA:
-            ${context.sha}
-
-            Java:
-            ${process.env.JAVA_HOME || 'Unknown'}
-
-            Suggested CoreStory workflow:
-            Use the Agentic Bug Resolution playbook against this issue. Treat the CI failure as the bug report and the PR as the proposed dependency/code change. First identify affected modules, likely dependency or code paths, then reproduce with the smallest test/build command before changing code.
-
-            Failure log excerpt:
-
-            \`\`\`
-            ${trimmedLog}
-            \`\`\`
-            `;
 
             if (existingIssues.data.length > 0) {
               const issue = existingIssues.data[0];
 
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
+              /*
+               * Replace the body so the issue always describes the latest
+               * failing commit, run attempt, diff, and artifact.
+               */
+              await github.rest.issues.update({
+                owner,
+                repo,
                 issue_number: issue.number,
-                body: `CI failed again for PR #${prNumber}.
-
-            Run:
-            ${runUrl}
-
-            Latest failure excerpt:
-
-            \`\`\`
-            ${trimmedLog}
-            \`\`\``
+                title: issueTitle,
+                body
               });
 
-              core.setFailed(`Build failed. Updated existing issue #${issue.number}.`);
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issue.number,
+                body: [
+                  `CI failed again for PR #${prNumber}.`,
+                  '',
+                  `**PR head SHA:** \`${headSha}\``,
+                  `**Workflow run:** ${runUrl}`,
+                  `**Artifact:** \`${artifactName}\``,
+                  '',
+                  'The issue body has been refreshed with the latest failure evidence.'
+                ].join('\n')
+              });
+
+              core.notice(
+                `Updated resolution-ready CI issue #${issue.number}.`
+              );
             } else {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
                 title: issueTitle,
                 body,
                 labels: [
@@ -219,7 +492,9 @@ jobs:
                 ]
               });
 
-              core.setFailed('Build failed. Created CI failure issue.');
+              core.notice(
+                `Created resolution-ready CI issue #${created.data.number}.`
+              );
             }
 
       - name: CI summary
@@ -234,9 +509,27 @@ jobs:
             echo "| Repository | \`${{ github.repository }}\` |"
             echo "| Workflow | \`${{ github.workflow }}\` |"
             echo "| Run | \`${{ github.run_id }}\` |"
+            echo "| Attempt | \`${{ github.run_attempt }}\` |"
             echo "| Ref | \`${{ github.ref }}\` |"
-            echo "| SHA | \`${{ github.sha }}\` |"
+            echo "| Workflow SHA | \`${{ github.sha }}\` |"
+
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              echo "| PR head SHA | \`${{ github.event.pull_request.head.sha }}\` |"
+              echo "| PR branch | \`${{ github.event.pull_request.head.ref }}\` |"
+            fi
+
             echo "| JDK resolved | \`${{ steps.java.outputs.java_version }}\` / \`${{ steps.java.outputs.setup_mode }}\` |"
-            echo "| Maven command | \`${{ steps.maven.outputs.cmd }}\` |"
+            echo "| Maven command | \`${{ steps.maven.outputs.full_command }}\` |"
             echo "| Build outcome | \`${{ steps.build.outcome }}\` |"
+
+            if [ "${{ steps.build.outcome }}" = "failure" ]; then
+              echo "| Failure artifact | \`ci-failure-${{ github.run_id }}-${{ github.run_attempt }}\` |"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail workflow when Maven build fails
+        if: steps.build.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "The Maven build failed."
+          exit 1
