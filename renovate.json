@@ -10,5 +10,17 @@
 
   "recreateWhen": "never",
   "rebaseWhen": "never",
-  "semanticCommits": "disabled"
+  "semanticCommits": "disabled",
+
+  "packageRules": [
+    {
+      "description": "Block Hibernate major upgrades and artifact replacements. Shared hibernate.version pins Hibernate 5.6 Jakarta-transition artifacts; majors/replacements require a dedicated ORM migration (see issue #37).",
+      "matchPackagePatterns": [
+        "^org\\.hibernate(:|$)",
+        "^org\\.hibernate\\.orm(:|$)"
+      ],
+      "matchUpdateTypes": ["major", "replacement"],
+      "enabled": false
+    }
+  ]
 }
