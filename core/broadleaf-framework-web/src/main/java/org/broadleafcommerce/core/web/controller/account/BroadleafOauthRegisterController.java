@@ -76,13 +76,16 @@ public class BroadleafOauthRegisterController extends BroadleafRegisterControlle
                         .getAuthentication();
                 Customer customer = registerCustomerForm.getCustomer();
                 OAuth2User oauth2User = authenticationToken.getPrincipal();
-                customer.setFirstName(oauth2User.getAttribute("firstName"));
-                customer.setLastName(oauth2User.getAttribute("lastName"));
+                // OpenID Connect standard claim names (as provided by Google): given_name, family_name, email, sub.
+                customer.setFirstName(oauth2User.getAttribute("given_name"));
+                customer.setLastName(oauth2User.getAttribute("family_name"));
                 customer.setEmailAddress(oauth2User.getAttribute("email"));
+                // The provider subject is the durable federated identity key used to match/link the customer.
+                customer.setExternalId(oauth2User.getAttribute("sub"));
                 if (isUseEmailForLogin()) {
                     customer.setUsername(oauth2User.getAttribute("email"));
                 } else {
-                    customer.setUsername(oauth2User.getAttribute("username"));
+                    customer.setUsername(oauth2User.getAttribute("sub"));
                 }
             }
         } catch (NullPointerException e) {

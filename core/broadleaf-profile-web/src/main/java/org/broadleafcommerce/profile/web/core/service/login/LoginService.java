@@ -26,6 +26,20 @@ public interface LoginService {
 
     Authentication loginCustomer(String username, String clearTextPassword);
 
+    /**
+     * Establishes an authenticated Broadleaf customer session for a customer that has already been authenticated by
+     * an external identity provider (e.g. Google OpenID Connect), without requiring a local password.
+     *
+     * <p>The customer's authorities are loaded via {@code blUserDetailsService} (which guarantees {@code ROLE_USER}),
+     * the {@link org.springframework.security.core.context.SecurityContext} is populated with a normalized,
+     * pre-authenticated token, and the standard customer/cart request-state processing is invoked so that downstream
+     * commerce state (anonymous merge, cart attach, login events) behaves exactly as it does for form login.</p>
+     *
+     * @param customer the persisted, provisioned Broadleaf customer to log in
+     * @return the resulting {@link Authentication}
+     */
+    Authentication loginCustomerExternally(Customer customer);
+
     void logoutCustomer();
 
 }

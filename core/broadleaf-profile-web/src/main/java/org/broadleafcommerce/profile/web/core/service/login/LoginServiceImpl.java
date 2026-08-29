@@ -61,8 +61,28 @@ public class LoginServiceImpl implements LoginService {
                 principal, clearTextPassword, principal.getAuthorities()
         );
         Authentication authentication = authenticationManager.authenticate(token);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return establishSession(authentication);
+    }
+
+    @Override
+    public Authentication loginCustomerExternally(Customer customer) {
+        UserDetails principal = userDetailsService.loadUserByUsername(customer.getUsername());
+        // The customer has already been authenticated by the external provider, so no password is verified here;
+        // normalize into a pre-authenticated UsernamePasswordAuthenticationToken so downstream Broadleaf processors
+        // (CustomerStateRequestProcessor, etc.) treat this as a standard logged-in customer.
+        UsernamePasswordAuthenticationToken token = UsernamePasswordAuthenticationToken.authenticated(
+                principal, null, principal.getAuthorities()
+        );
+        return establishSession(token);
+    }
+
+    /**
+     * Populates the {@link SecurityContext} with the given authentication, persists it, and runs the standard
+     * customer/cart request-state processing shared by all login paths.
+     */
+    protected Authentication establishSession(Authentication authentication) {
         SecurityContext securityContext = SecurityContextHolder.getContext();
+        securityContext.setAuthentication(authentication);
         SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
         securityContextHolderStrategy.setContext(securityContext);
         BroadleafRequestContext brc = BroadleafRequestContext.getBroadleafRequestContext();
