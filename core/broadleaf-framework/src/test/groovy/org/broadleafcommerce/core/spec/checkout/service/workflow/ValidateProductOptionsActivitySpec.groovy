@@ -152,4 +152,61 @@ class ValidateProductOptionsActivitySpec extends BaseCheckoutActivitySpec {
         then: "Context will have a new message in its ActivityMessages"
         ((ActivityMessages) context).getActivityMessages().size() == 1
     }
+
+    def "BR-006 a regex product option that does not match its validation string stops checkout"() {
+        setup:
+        productOption.setRequired(false)
+        productOption.setAttributeName("size")
+        productOption.setProductOptionValidationStrategyType(ProductOptionValidationStrategyType.SUBMIT_ORDER)
+        productOption.setProductOptionValidationType(ProductOptionValidationType.REGEX)
+        productOption.setValidationString("^[0-9]+\$")
+        productOptionXref.setProductOption(productOption)
+        productOptions << productOptionXref
+
+        product.setProductOptionXrefs(productOptions)
+        OrderItemAttributeImpl attribute = new OrderItemAttributeImpl()
+        attribute.setValue("abc")
+        orderItem.setProduct(product)
+        orderItem.setOrderItemAttributes(["size": attribute])
+        orderItems << orderItem
+        context.seedData.order.setOrderItems(orderItems)
+
+        activity = new ValidateProductOptionsActivity().with {
+            productOptionValidationService = new ProductOptionValidationServiceImpl()
+            it
+        }
+
+        when: "I execute the ValidateProductOptionsActivity"
+        context = activity.execute(context)
+
+        then: "ProductOptionValidationException is thrown"
+        ProductOptionValidationException ex = thrown()
+        ex.message.contains("does not match regex string")
+    }
+
+    def "BR-005 a non-required option with a blank value does not fail the required-attribute check"() {
+        setup:
+        productOption.setRequired(false)
+        productOption.setAttributeName("size")
+        productOption.setProductOptionValidationStrategyType(ProductOptionValidationStrategyType.NONE)
+        productOptionXref.setProductOption(productOption)
+        productOptions << productOptionXref
+
+        product.setProductOptionXrefs(productOptions)
+        orderItem.setProduct(product)
+        orderItem.setOrderItemAttributes(new HashMap())
+        orderItems << orderItem
+        context.seedData.order.setOrderItems(orderItems)
+
+        activity = new ValidateProductOptionsActivity().with {
+            productOptionValidationService = new ProductOptionValidationServiceImpl()
+            it
+        }
+
+        when: "I execute the ValidateProductOptionsActivity"
+        context = activity.execute(context)
+
+        then: "the required-attribute failure is not thrown"
+        notThrown(RequiredAttributeNotProvidedException)
+    }
 }

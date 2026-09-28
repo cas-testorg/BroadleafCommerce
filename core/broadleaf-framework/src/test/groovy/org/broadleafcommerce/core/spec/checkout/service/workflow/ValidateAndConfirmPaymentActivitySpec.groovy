@@ -264,4 +264,98 @@ class ValidateAndConfirmPaymentActivitySpec extends BaseCheckoutActivitySpec {
 
     }
 
+    def "BR-009 active coverage equal to the order total continues"() {
+        setup: "one active successful payment equal to the order total"
+        reset()
+        context.seedData.order.payments << confirmedCC
+        context.seedData.order.total = new Money(10)
+
+        when: "I execute the ValidateAndConfirmPaymentActivity"
+        context = activity.execute(context)
+
+        then: "the coverage check does not fail"
+        notThrown(IllegalArgumentException)
+    }
+
+    def "BR-009 an inactive payment does not count toward the order total"() {
+        setup: "the only payment is inactive"
+        reset()
+        confirmedCC.setArchived('Y' as char)
+        context.seedData.order.payments << confirmedCC
+        context.seedData.order.total = new Money(10)
+
+        when: "I execute the ValidateAndConfirmPaymentActivity"
+        context = activity.execute(context)
+
+        then: "checkout fails because inactive payments are ignored"
+        IllegalArgumentException ex = thrown()
+        ex.message.contains("The sum of the payments is 0")
+    }
+
+    def "BR-010 a null confirmation response stops checkout"() {
+        setup: "an unconfirmed payment whose confirmation strategy returns null"
+        reset()
+        context.seedData.order.payments << unconfirmedTP
+        context.seedData.order.total = new Money(100)
+
+        OrderPaymentConfirmationStrategy mockStrategy = Mock()
+        mockStrategy.confirmTransaction(*_) >> null
+
+        activity = new ValidateAndConfirmPaymentActivity().with {
+            orderPaymentStatusService = statusService
+            orderPaymentConfirmationStrategy = mockStrategy
+            it
+        }
+
+        when: "I execute the ValidateAndConfirmPaymentActivity"
+        context = activity.execute(context)
+
+        then: "CheckoutException is thrown before the insufficient-total check"
+        CheckoutException ex = thrown()
+        ex.message.contains("The ResponseDTO null")
+    }
+
+    def "BR-011 more than one transaction of the confirmed type stops checkout"() {
+        setup: "confirmation succeeds and the saved payment then has two transactions of that type"
+        reset()
+        context.seedData.order.payments << unconfirmedTP
+        context.seedData.order.total = new Money(12)
+
+        PaymentResponseDTO responseDTO = new PaymentResponseDTO(PaymentType.THIRD_PARTY_ACCOUNT, PaymentGatewayType.PASSTHROUGH)
+                .amount(new Money(12))
+                .rawResponse("TEST")
+                .successful(true)
+                .paymentTransactionType(PaymentTransactionType.AUTHORIZE_AND_CAPTURE)
+
+        OrderPaymentConfirmationStrategy mockStrategy = Mock()
+        mockStrategy.confirmTransaction(*_) >> responseDTO
+
+        OrderPaymentService mockOrderPaymentService = Mock()
+        mockOrderPaymentService.createTransaction() >> new PaymentTransactionImpl()
+        mockOrderPaymentService.save(_ as PaymentTransaction) >> { PaymentTransaction transaction -> transaction }
+        mockOrderPaymentService.save(_ as OrderPayment) >> { OrderPayment payment ->
+            PaymentTransaction extra = new PaymentTransactionImpl()
+            extra.type = PaymentTransactionType.AUTHORIZE_AND_CAPTURE
+            extra.amount = new Money(12)
+            extra.success = true
+            extra.orderPayment = payment
+            payment.addTransaction(extra)
+            payment
+        }
+
+        activity = new ValidateAndConfirmPaymentActivity().with {
+            orderPaymentStatusService = statusService
+            orderPaymentConfirmationStrategy = mockStrategy
+            orderPaymentService = mockOrderPaymentService
+            it
+        }
+
+        when: "I execute the ValidateAndConfirmPaymentActivity"
+        context = activity.execute(context)
+
+        then: "IllegalArgumentException is thrown because more than one confirmed transaction exists"
+        IllegalArgumentException ex = thrown()
+        ex.message.contains("There are more than one confirmed payment transactions")
+    }
+
 }

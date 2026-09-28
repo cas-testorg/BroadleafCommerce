@@ -153,6 +153,27 @@ class ValidateAvailabilityActivitySpec extends BaseCheckoutActivitySpec {
         then: "IllegalArgumentException is thrown"
         1 * mockOrderItem.getSku() >> mockSku
         IllegalArgumentException e = thrown()
+        e.message == "The requested skuId (1) is no longer active"
+    }
+
+    def "BR-004 an unrecognized line returns before a later inactive sku is validated"() {
+        setup: "an unrecognized item precedes a discrete line whose sku is inactive"
+        OrderItemImpl unrecognized = new OrderItemImpl()
+        DiscreteOrderItemImpl laterItem = Spy(DiscreteOrderItemImpl)
+        SkuImpl inactiveSku = Spy(SkuImpl)
+        inactiveSku.getId() >> 9
+        inactiveSku.isActive() >> false
+        laterItem.getSku() >> inactiveSku
+        laterItem.getQuantity() >> 1
+        context.seedData.order.orderItems << unrecognized
+        context.seedData.order.orderItems << laterItem
+
+        when: "the activity is executed"
+        def result = activity.execute(context)
+
+        then: "the activity returns without validating the later line"
+        result.is(context)
+        0 * mockInventoryService.checkSkuAvailability(*_)
     }
 
 }
