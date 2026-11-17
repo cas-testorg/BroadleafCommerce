@@ -6,7 +6,9 @@
   ],
 
   "baseBranchPatterns": ["Integration"],
-  "dependencyDashboardTitle": "Renovate Dashboard",
+  "dependencyDashboard": {
+    "title": "Renovate Dashboard"
+  },
 
   "recreateWhen": "never",
   "rebaseWhen": "never",
